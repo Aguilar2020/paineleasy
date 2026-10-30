@@ -2953,8 +2953,7 @@ export function RoutesManagementView({
                   )}
                 </td>
               </tr>
-              ))
-            )}
+            ))}
           </tbody>
         </table>
       </div>
