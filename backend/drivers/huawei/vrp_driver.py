@@ -223,8 +223,29 @@ class HuaweiVRPDriver:
                     f"{dest_mask:<19} {r.protocol:<7} {r.preference:<4} 0         D     {r.next_hop:<15} Vlanif"
                 )
             return "\n".join(lines)
-        if cmd == "display current-configuration":
+        if cmd in ("display current-configuration", "display cu", "dis cu"):
             return self.build_full_current_configuration()
+        if cmd in (
+            "dis cu | include route-static",
+            "display cu | include route-static",
+            "display current-configuration | include route-static",
+        ):
+            if not self.device.supports_l3_routing:
+                return ""
+            route_lines = []
+            for r in sorted(
+                self.device.static_routes,
+                key=lambda x: (x.destination_network, x.cidr_prefix),
+            ):
+                if r.protocol.lower() == "static":
+                    mask_str = r.subnet_mask or cidr_to_netmask(r.cidr_prefix)
+                    line = f"ip route-static {r.destination_network} {mask_str} {r.next_hop}"
+                    if r.preference and r.preference != 60:
+                        line += f" preference {r.preference}"
+                    if r.description:
+                        line += f" description {r.description}"
+                    route_lines.append(line)
+            return "\n".join(route_lines)
 
         raise HuaweiSSHDriverError(
             f"Error: Unrecognized command found: '{cmd}' on {self.device.model}"

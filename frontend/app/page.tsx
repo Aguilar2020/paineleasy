@@ -715,6 +715,7 @@ export default function HuaweiNetworkManagerApp() {
 
           {activeNav === "interfaces" && (
             <InterfacesVisualView
+              pops={pops}
               devices={devices}
               customers={customers}
               selectedDeviceId={selectedMapDeviceId}
@@ -729,6 +730,7 @@ export default function HuaweiNetworkManagerApp() {
           {activeNav === "vlans" && (
             <VlansAndVlanifsView
               mode="vlans"
+              pops={pops}
               vlans={vlans}
               vlanifs={vlanifs}
               devices={devices}
@@ -741,6 +743,7 @@ export default function HuaweiNetworkManagerApp() {
           {activeNav === "vlanifs" && (
             <VlansAndVlanifsView
               mode="vlanifs"
+              pops={pops}
               vlans={vlans}
               vlanifs={vlanifs}
               devices={devices}
@@ -752,6 +755,7 @@ export default function HuaweiNetworkManagerApp() {
 
           {activeNav === "rotas" && (
             <RoutesManagementView
+              pops={pops}
               routes={routes}
               devices={devices}
               userRole={userRole}

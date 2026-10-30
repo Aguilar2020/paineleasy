@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Pop,
   Customer,
@@ -1701,131 +1701,247 @@ export function DevicesManagementView({
         )}
       </div>
 
+      {/* Legenda de Ícones de Status: Verde (Conectado), Laranja (Sem Sincronização), Vermelho (Não Conectado) */}
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 py-3 flex flex-wrap items-center justify-between gap-3 text-xs shadow-sm">
+        <span className="font-extrabold text-slate-700 dark:text-slate-200 uppercase tracking-wider">
+          Status dos Equipamentos:
+        </span>
+        <div className="flex flex-wrap items-center gap-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 dark:bg-emerald-950/50 border border-emerald-200 dark:border-emerald-800 text-emerald-800 dark:text-emerald-300 font-bold">
+            <span className="w-3 h-3 rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/50 inline-block" />
+            <CheckCircle2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+            <span>
+              Verde: Conectado & Sincronizado (
+              {
+                devices.filter(
+                  (d) => d.status === "ONLINE" && Boolean(d.last_synced_at)
+                ).length
+              }
+              )
+            </span>
+          </div>
+
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-orange-50 dark:bg-orange-950/50 border border-orange-300 dark:border-orange-800 text-orange-800 dark:text-orange-300 font-bold">
+            <span className="w-3 h-3 rounded-full bg-orange-500 shadow-sm shadow-orange-500/50 inline-block animate-pulse" />
+            <AlertTriangle className="w-4 h-4 text-orange-500 dark:text-orange-400" />
+            <span>
+              Laranja: Sem Sincronização (
+              {
+                devices.filter(
+                  (d) =>
+                    d.status !== "OFFLINE" &&
+                    d.status !== "ERROR" &&
+                    (!d.last_synced_at ||
+                      d.status === "WARNING" ||
+                      d.status === "UNSYNCED")
+                ).length
+              }
+              )
+            </span>
+          </div>
+
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 text-red-800 dark:text-red-300 font-bold">
+            <span className="w-3 h-3 rounded-full bg-red-500 shadow-sm shadow-red-500/50 inline-block" />
+            <X className="w-4 h-4 text-red-600 dark:text-red-400" />
+            <span>
+              Vermelho: Não Conectado (
+              {
+                devices.filter(
+                  (d) => d.status === "OFFLINE" || d.status === "ERROR"
+                ).length
+              }
+              )
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Equipment Cards with the 5 Mandatory Action Buttons */}
       <div className="grid grid-cols-1 gap-4">
-        {devices.map((dev) => (
-          <div
-            key={dev.id}
-            className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4"
-          >
-            <div className="flex flex-wrap items-start justify-between gap-4">
-              <div>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <span
-                    className={`w-2.5 h-2.5 rounded-full ${
-                      dev.status === "ONLINE" ? "bg-emerald-500" : "bg-red-500"
-                    }`}
-                  />
-                  <h3 className="text-base font-bold font-mono text-slate-900 dark:text-slate-100">
-                    {dev.name}
-                  </h3>
-                  <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-semibold">
-                    {dev.pop_name}
+        {devices.map((dev) => {
+          const isDisconnected =
+            dev.status === "OFFLINE" || dev.status === "ERROR";
+          const isUnsynced =
+            !isDisconnected &&
+            (!dev.last_synced_at ||
+              dev.status === "WARNING" ||
+              dev.status === "UNSYNCED");
+          const isConnectedSynced = !isDisconnected && !isUnsynced;
+
+          return (
+            <div
+              key={dev.id}
+              className={`rounded-xl border-2 p-5 shadow-sm space-y-4 transition ${
+                isDisconnected
+                  ? "border-red-200 dark:border-red-900/60 bg-white dark:bg-slate-900"
+                  : isUnsynced
+                  ? "border-orange-300 dark:border-orange-900/60 bg-white dark:bg-slate-900"
+                  : "border-emerald-200 dark:border-slate-800 bg-white dark:bg-slate-900"
+              }`}
+            >
+              <div className="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2.5">
+                    {/* Ícone Visual Grande Verde / Laranja / Vermelho */}
+                    {isConnectedSynced && (
+                      <span
+                        title="Conectado e Sincronizado"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-700 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold"
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                        CONECTADO
+                      </span>
+                    )}
+
+                    {isUnsynced && (
+                      <span
+                        title="Sem Sincronização — Clique em 'Sincronizar informações'"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-orange-100 dark:bg-orange-950/80 border border-orange-300 dark:border-orange-700 text-orange-800 dark:text-orange-300 text-xs font-extrabold"
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-orange-500 animate-pulse" />
+                        <AlertTriangle className="w-3.5 h-3.5 text-orange-600 dark:text-orange-400" />
+                        SEM SINCRONIZAÇÃO
+                      </span>
+                    )}
+
+                    {isDisconnected && (
+                      <span
+                        title="Não Conectado (Offline / Sem resposta SSH)"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-red-100 dark:bg-red-950/80 border border-red-300 dark:border-red-700 text-red-800 dark:text-red-300 text-xs font-extrabold"
+                      >
+                        <span className="w-2.5 h-2.5 rounded-full bg-red-600" />
+                        <X className="w-3.5 h-3.5 text-red-600 dark:text-red-400" />
+                        NÃO CONECTADO
+                      </span>
+                    )}
+
+                    <h3 className="text-base font-bold font-mono text-slate-900 dark:text-slate-100">
+                      {dev.name}
+                    </h3>
+                    <span className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 text-xs font-semibold">
+                      {dev.pop_name}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-mono">
+                      {dev.vendor} {dev.model}
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded text-xs font-semibold ${
+                        dev.supports_l3_routing
+                          ? "bg-emerald-100/80 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300"
+                          : "bg-amber-100/80 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300"
+                      }`}
+                    >
+                      {dev.supports_l3_routing
+                        ? "Suporta Roteamento Layer 3"
+                        : "Switch Acesso Layer 2"}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
+                    IP Gerência:{" "}
+                    <strong className="font-mono text-slate-800 dark:text-slate-200">
+                      {dev.management_ip}:{dev.ssh_port}
+                    </strong>{" "}
+                    • Usuário SSH:{" "}
+                    <strong className="font-mono">{dev.ssh_username}</strong>{" "}
+                    (Senha protegida: <code className="font-mono">••••••••</code>)
+                    • Versão: <code className="font-mono">{dev.system_version}</code>
+                    {" • "}
+                    {dev.last_synced_at ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                        Última sincronização:{" "}
+                        {new Date(dev.last_synced_at).toLocaleString("pt-BR")}
+                      </span>
+                    ) : (
+                      <span className="text-orange-600 dark:text-orange-400 font-bold">
+                        Ainda não sincronizado (clique em &ldquo;Sincronizar informações&rdquo;)
+                      </span>
+                    )}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
+                  <span>
+                    <strong>{dev.up_interfaces}</strong>/{dev.interface_count}{" "}
+                    Portas UP
                   </span>
-                  <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-mono">
-                    {dev.vendor} {dev.model}
+                  <span>•</span>
+                  <span>
+                    <strong>{dev.vlan_count}</strong> VLANs
                   </span>
-                  <span
-                    className={`px-2 py-0.5 rounded text-xs font-semibold ${
-                      dev.supports_l3_routing
-                        ? "bg-emerald-100/80 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300"
-                        : "bg-amber-100/80 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300"
-                    }`}
-                  >
-                    {dev.supports_l3_routing
-                      ? "Suporta Roteamento Layer 3"
-                      : "Switch Acesso Layer 2"}
+                  <span>•</span>
+                  <span>
+                    <strong>{dev.vlanif_count}</strong> Vlanifs
+                  </span>
+                  <span>•</span>
+                  <span>
+                    <strong>{dev.route_count}</strong> Rotas
                   </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  IP Gerência:{" "}
-                  <strong className="font-mono text-slate-800 dark:text-slate-200">
-                    {dev.management_ip}:{dev.ssh_port}
-                  </strong>{" "}
-                  • Usuário SSH:{" "}
-                  <strong className="font-mono">{dev.ssh_username}</strong>{" "}
-                  (Senha protegida: <code className="font-mono">••••••••</code>)
-                  • Versão: <code className="font-mono">{dev.system_version}</code>
-                </p>
               </div>
 
-              <div className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-400">
-                <span>
-                  <strong>{dev.up_interfaces}</strong>/{dev.interface_count}{" "}
-                  Portas UP
-                </span>
-                <span>•</span>
-                <span>
-                  <strong>{dev.vlan_count}</strong> VLANs
-                </span>
-                <span>•</span>
-                <span>
-                  <strong>{dev.vlanif_count}</strong> Vlanifs
-                </span>
-                <span>•</span>
-                <span>
-                  <strong>{dev.route_count}</strong> Rotas
-                </span>
-              </div>
-            </div>
+              {/* 5 Mandatory SSH Action Buttons from Section 4 */}
+              <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                <button
+                  type="button"
+                  disabled={busyDeviceId === dev.id}
+                  onClick={() => handleTestConnection(dev)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-xs font-semibold text-slate-800 dark:text-slate-200 transition"
+                >
+                  <Wifi className="w-3.5 h-3.5 text-emerald-500" />
+                  Testar conexão
+                </button>
 
-            {/* 5 Mandatory SSH Action Buttons from Section 4 */}
-            <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-              <button
-                type="button"
-                disabled={busyDeviceId === dev.id}
-                onClick={() => handleTestConnection(dev)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-xs font-semibold text-slate-800 dark:text-slate-200 transition"
-              >
-                <Wifi className="w-3.5 h-3.5 text-emerald-500" />
-                Testar conexão
-              </button>
+                <button
+                  type="button"
+                  disabled={busyDeviceId === dev.id}
+                  onClick={() => handleConnectDiscovery(dev)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-xs font-semibold text-slate-800 dark:text-slate-200 transition"
+                >
+                  <Terminal className="w-3.5 h-3.5 text-blue-500" />
+                  Conectar
+                </button>
 
-              <button
-                type="button"
-                disabled={busyDeviceId === dev.id}
-                onClick={() => handleConnectDiscovery(dev)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-xs font-semibold text-slate-800 dark:text-slate-200 transition"
-              >
-                <Terminal className="w-3.5 h-3.5 text-blue-500" />
-                Conectar
-              </button>
-
-              <button
-                type="button"
-                disabled={busyDeviceId === dev.id || userRole === "readonly"}
-                onClick={() => handleSyncDevice(dev)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-xs font-semibold text-slate-800 dark:text-slate-200 transition"
-              >
-                <RefreshCw
-                  className={`w-3.5 h-3.5 text-indigo-500 ${
-                    busyDeviceId === dev.id ? "animate-spin" : ""
+                <button
+                  type="button"
+                  disabled={busyDeviceId === dev.id || userRole === "readonly"}
+                  onClick={() => handleSyncDevice(dev)}
+                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${
+                    isUnsynced
+                      ? "border-orange-400 bg-orange-500 hover:bg-orange-600 text-white shadow-sm"
+                      : "border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-slate-800 dark:text-slate-200"
                   }`}
-                />
-                Sincronizar informações
-              </button>
+                >
+                  <RefreshCw
+                    className={`w-3.5 h-3.5 ${
+                      isUnsynced ? "text-white" : "text-indigo-500"
+                    } ${busyDeviceId === dev.id ? "animate-spin" : ""}`}
+                  />
+                  Sincronizar informações
+                </button>
 
-              <button
-                type="button"
-                disabled={busyDeviceId === dev.id}
-                onClick={() => handleConsultConfig(dev)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-xs font-semibold text-slate-800 dark:text-slate-200 transition"
-              >
-                <FileCode2 className="w-3.5 h-3.5 text-amber-500" />
-                Consultar configuração
-              </button>
+                <button
+                  type="button"
+                  disabled={busyDeviceId === dev.id}
+                  onClick={() => handleConsultConfig(dev)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 text-xs font-semibold text-slate-800 dark:text-slate-200 transition"
+                >
+                  <FileCode2 className="w-3.5 h-3.5 text-amber-500" />
+                  Consultar configuração
+                </button>
 
-              <button
-                type="button"
-                onClick={() => onViewInterfaces(dev)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition ml-auto"
-              >
-                <Eye className="w-3.5 h-3.5" />
-                Visualizar interfaces
-              </button>
+                <button
+                  type="button"
+                  onClick={() => onViewInterfaces(dev)}
+                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold transition ml-auto"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  Visualizar interfaces
+                </button>
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Terminal Output Modal */}
@@ -2012,6 +2128,7 @@ export function DevicesManagementView({
 // 4. INTERFACES & VISUAL PORT MAP VIEW (Section 5 + Atrelar/Remover VLAN na Porta)
 // ============================================================================
 export function InterfacesVisualView({
+  pops = [],
   devices,
   customers = [],
   userRole = "admin",
@@ -2021,6 +2138,7 @@ export function InterfacesVisualView({
   onRefresh,
   onConfigurePort,
 }: {
+  pops?: Pop[];
   devices: Device[];
   customers?: Customer[];
   userRole?: string;
@@ -2030,11 +2148,33 @@ export function InterfacesVisualView({
   onRefresh?: () => void;
   onConfigurePort: (device: Device, iface: NetworkInterface) => void;
 }) {
+  const currentDevice =
+    devices.find((d) => d.id === selectedDeviceId) || devices[0];
+
+  const [selectedPopId, setSelectedPopId] = useState<number>(
+    currentDevice?.pop_id || pops[0]?.id || 1
+  );
+
+  // Sync selectedPopId if currentDevice changes externally
+  useEffect(() => {
+    if (currentDevice && currentDevice.pop_id !== selectedPopId) {
+      setSelectedPopId(currentDevice.pop_id);
+    }
+  }, [currentDevice?.id]);
+
+  const popDevices = devices.filter((d) => d.pop_id === selectedPopId);
+
+  const handleSelectPop = (newPopId: number) => {
+    setSelectedPopId(newPopId);
+    const swInPop = devices.filter((d) => d.pop_id === newPopId);
+    if (swInPop.length > 0) {
+      onSelectDeviceId(swInPop[0].id);
+    }
+  };
+
   const [selectedPortName, setSelectedPortName] = useState<string>(
     interfaces[0]?.name || "XGigabitEthernet0/0/39"
   );
-  const currentDevice =
-    devices.find((d) => d.id === selectedDeviceId) || devices[0];
   const selectedIfaceObj =
     interfaces.find((i) => i.name === selectedPortName) || interfaces[0];
 
@@ -2102,26 +2242,147 @@ export function InterfacesVisualView({
             Mapa Visual de Portas & Atrelamento de Cliente / VLAN na Porta
           </h2>
           <p className="text-xs text-slate-500">
-            Clique em qualquer conector Ethernet para inspecionar a porta,
-            atrelar Cliente e VLAN diretamente ou remover a VLAN da porta.
+            Escolha primeiro o <strong>POP</strong> para carregar o Switch
+            automaticamente (caso o POP tenha mais de um Switch, escolha qual
+            Switch operar).
           </p>
         </div>
+      </div>
 
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">
-            Equipamento:
-          </span>
-          <select
-            value={currentDevice?.id || ""}
-            onChange={(e) => onSelectDeviceId(Number(e.target.value))}
-            className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-bold"
-          >
-            {devices.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name} ({d.model} • {d.interface_count} portas)
-              </option>
-            ))}
-          </select>
+      {/* CAIXA DE SELEÇÃO: 1º ESCOLHER O POP -> MOSTRAR O SWITCH (OU ESCOLHER QUAL SWITCH SE HOUVER >1) */}
+      <div className="rounded-2xl border-2 border-blue-200 dark:border-blue-900/70 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          {/* Coluna 1: Escolher o POP */}
+          <div className="space-y-2.5">
+            <label className="block text-xs font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+              1. Escolher o POP (Por Rolagem):
+            </label>
+            <select
+              value={selectedPopId}
+              onChange={(e) => handleSelectPop(Number(e.target.value))}
+              className="w-full rounded-xl border-2 border-blue-500 bg-blue-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+            >
+              {pops.map((p) => {
+                const swCount = devices.filter((d) => d.pop_id === p.id).length;
+                return (
+                  <option key={p.id} value={p.id}>
+                    {p.name} — {p.city}/{p.state} ({swCount}{" "}
+                    {swCount === 1 ? "Switch" : "Switches"})
+                  </option>
+                );
+              })}
+            </select>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {pops.map((p) => {
+                const swCount = devices.filter((d) => d.pop_id === p.id).length;
+                const active = p.id === selectedPopId;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleSelectPop(p.id)}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${
+                      active
+                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50"
+                    }`}
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>{p.name}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                        active
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                      }`}
+                    >
+                      {swCount} SW
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Coluna 2: Switch do POP Selecionado (ou Seletor quando > 1 Switch no POP) */}
+          <div className="space-y-2.5">
+            <label className="block text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+              {popDevices.length > 1
+                ? `2. Este POP possui ${popDevices.length} Switches — Escolha qual Switch operar:`
+                : "2. Switch do POP Selecionado (Carregado Automaticamente):"}
+            </label>
+
+            {popDevices.length > 1 ? (
+              <div className="space-y-2.5">
+                <select
+                  value={currentDevice?.id || ""}
+                  onChange={(e) => onSelectDeviceId(Number(e.target.value))}
+                  className="w-full rounded-xl border-2 border-indigo-500 bg-indigo-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-mono font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+                >
+                  {popDevices.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} • {d.management_ip} ({d.model} —{" "}
+                      {d.interface_count} portas)
+                    </option>
+                  ))}
+                </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {popDevices.map((d) => {
+                    const isSelected = currentDevice?.id === d.id;
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => onSelectDeviceId(d.id)}
+                        className={`p-3 rounded-xl border-2 text-left transition ${
+                          isSelected
+                            ? "border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60 shadow-sm"
+                            : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:border-indigo-400"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-extrabold text-xs text-slate-900 dark:text-white">
+                            {d.name}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              isSelected
+                                ? "bg-indigo-600 text-white"
+                                : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                            }`}
+                          >
+                            {isSelected ? "SELECIONADO" : "Escolher"}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-mono mt-1">
+                          {d.management_ip} • {d.interface_count} portas
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : currentDevice ? (
+              <div className="p-3.5 rounded-xl border-2 border-emerald-500/70 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="font-mono font-extrabold text-sm text-slate-900 dark:text-white">
+                      {currentDevice.name}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-extrabold">
+                      SWITCH ÚNICO DO POP
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-300 font-mono mt-1">
+                    IP: {currentDevice.management_ip} • {currentDevice.model} •{" "}
+                    {currentDevice.interface_count} portas
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -2255,6 +2516,7 @@ export function InterfacesVisualView({
 // ============================================================================
 export function VlansAndVlanifsView({
   mode,
+  pops = [],
   vlans,
   vlanifs,
   devices,
@@ -2263,6 +2525,7 @@ export function VlansAndVlanifsView({
   onStartProvisioning,
 }: {
   mode: "vlans" | "vlanifs";
+  pops?: Pop[];
   vlans: Vlan[];
   vlanifs: Vlanif[];
   devices: Device[];
@@ -2270,13 +2533,43 @@ export function VlansAndVlanifsView({
   onRefresh: () => void;
   onStartProvisioning: () => void;
 }) {
-  const [deviceFilter, setDeviceFilter] = useState<string>("");
+  const initialPopId = pops[0]?.id || devices[0]?.pop_id || 1;
+  const initialSw =
+    devices.find((d) => d.pop_id === initialPopId) || devices[0];
+
+  const [selectedPopId, setSelectedPopId] = useState<number>(initialPopId);
+  const [selectedSwitchId, setSelectedSwitchId] = useState<number>(
+    initialSw?.id || 1
+  );
+
+  const popDevices = devices.filter((d) => d.pop_id === selectedPopId);
+  const currentSwitch =
+    devices.find((d) => d.id === selectedSwitchId) ||
+    popDevices[0] ||
+    devices[0];
+
+  const handleSelectPop = (newPopId: number) => {
+    setSelectedPopId(newPopId);
+    const swInPop = devices.filter((d) => d.pop_id === newPopId);
+    if (swInPop.length > 0) {
+      setSelectedSwitchId(swInPop[0].id);
+      setTargetDeviceId(swInPop[0].id);
+      setVifDeviceId(swInPop[0].id);
+    }
+  };
+
+  const handleSelectSwitch = (newSwId: number) => {
+    setSelectedSwitchId(newSwId);
+    setTargetDeviceId(newSwId);
+    setVifDeviceId(newSwId);
+  };
+
   const [showAddVlanModal, setShowAddVlanModal] = useState(false);
   const [showAddVlanifModal, setShowAddVlanifModal] = useState(false);
 
   // Add VLAN state
   const [targetDeviceId, setTargetDeviceId] = useState<number>(
-    devices[0]?.id || 1
+    initialSw?.id || 1
   );
   const [newVlanId, setNewVlanId] = useState<number>(2455);
   const [newVlanDesc, setNewVlanDesc] = useState<string>("CLIENTE-NOVO");
@@ -2284,7 +2577,7 @@ export function VlansAndVlanifsView({
   // Add Vlanif IP state
   const l3Devices = devices.filter((d) => d.supports_l3_routing);
   const [vifDeviceId, setVifDeviceId] = useState<number>(
-    l3Devices[0]?.id || devices[0]?.id || 1
+    initialSw?.id || l3Devices[0]?.id || 1
   );
   const [vifVlanId, setVifVlanId] = useState<number>(2455);
   const [vifIp, setVifIp] = useState<string>("10.24.55.1");
@@ -2294,12 +2587,12 @@ export function VlansAndVlanifsView({
 
   const canModifyVlanOrIp = userRole === "admin" || userRole === "operador";
 
-  const filteredVlans = deviceFilter
-    ? vlans.filter((v) => v.device_id === Number(deviceFilter))
+  const filteredVlans = currentSwitch
+    ? vlans.filter((v) => v.device_id === currentSwitch.id)
     : vlans;
 
-  const filteredVlanifs = deviceFilter
-    ? vlanifs.filter((v) => v.device_id === Number(deviceFilter))
+  const filteredVlanifs = currentSwitch
+    ? vlanifs.filter((v) => v.device_id === currentSwitch.id)
     : vlanifs;
 
   const handleAddVlan = async (e: React.FormEvent) => {
@@ -2376,34 +2669,25 @@ export function VlansAndVlanifsView({
               : "Gerenciamento de IPs / Vlanifs (Colocar e Remover IP Gateway)"}
           </h2>
           <p className="text-xs text-slate-500">
-            Sincronizado via SSH com os equipamentos Huawei VRP.
+            Escolha primeiro o <strong>POP</strong> para carregar o Switch
+            automaticamente (caso o POP tenha mais de um Switch, escolha qual
+            Switch visualizar).
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          <select
-            value={deviceFilter}
-            onChange={(e) => setDeviceFilter(e.target.value)}
-            className="rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs"
-          >
-            <option value="">Todos os Equipamentos</option>
-            {devices.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
-
           {canModifyVlanOrIp && mode === "vlans" && (
             <button
               type="button"
               onClick={() => {
                 setErrMsg(null);
+                if (currentSwitch) setTargetDeviceId(currentSwitch.id);
                 setShowAddVlanModal(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm"
             >
-              <Plus className="w-4 h-4" /> Colocar (Criar) VLAN
+              <Plus className="w-4 h-4" /> Colocar (Criar) VLAN em{" "}
+              {currentSwitch?.name || "Switch"}
             </button>
           )}
 
@@ -2412,13 +2696,154 @@ export function VlansAndVlanifsView({
               type="button"
               onClick={() => {
                 setErrMsg(null);
+                if (currentSwitch) setVifDeviceId(currentSwitch.id);
                 setShowAddVlanifModal(true);
               }}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm"
             >
-              <Plus className="w-4 h-4" /> Colocar (Criar) IP Vlanif
+              <Plus className="w-4 h-4" /> Colocar (Criar) IP Vlanif em{" "}
+              {currentSwitch?.name || "Switch"}
             </button>
           )}
+        </div>
+      </div>
+
+      {/* CAIXA DE SELEÇÃO: 1º ESCOLHER O POP -> MOSTRAR O SWITCH (OU ESCOLHER QUAL SWITCH SE HOUVER >1) */}
+      <div className="rounded-2xl border-2 border-blue-200 dark:border-blue-900/70 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          {/* Coluna 1: Escolher o POP */}
+          <div className="space-y-2.5">
+            <label className="block text-xs font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+              1. Escolher o POP (Por Rolagem):
+            </label>
+            <select
+              value={selectedPopId}
+              onChange={(e) => handleSelectPop(Number(e.target.value))}
+              className="w-full rounded-xl border-2 border-blue-500 bg-blue-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+            >
+              {pops.map((p) => {
+                const swCount = devices.filter((d) => d.pop_id === p.id).length;
+                return (
+                  <option key={p.id} value={p.id}>
+                    {p.name} — {p.city}/{p.state} ({swCount}{" "}
+                    {swCount === 1 ? "Switch" : "Switches"})
+                  </option>
+                );
+              })}
+            </select>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {pops.map((p) => {
+                const swCount = devices.filter((d) => d.pop_id === p.id).length;
+                const active = p.id === selectedPopId;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleSelectPop(p.id)}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${
+                      active
+                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50"
+                    }`}
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>{p.name}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                        active
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                      }`}
+                    >
+                      {swCount} SW
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Coluna 2: Switch do POP Selecionado (ou Seletor quando > 1 Switch no POP) */}
+          <div className="space-y-2.5">
+            <label className="block text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+              {popDevices.length > 1
+                ? `2. Este POP possui ${popDevices.length} Switches — Escolha qual Switch:`
+                : "2. Switch do POP Selecionado (Carregado Automaticamente):"}
+            </label>
+
+            {popDevices.length > 1 ? (
+              <div className="space-y-2.5">
+                <select
+                  value={currentSwitch?.id || ""}
+                  onChange={(e) => handleSelectSwitch(Number(e.target.value))}
+                  className="w-full rounded-xl border-2 border-indigo-500 bg-indigo-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-mono font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+                >
+                  {popDevices.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} • {d.management_ip} ({d.vlan_count} VLANs •{" "}
+                      {d.vlanif_count} Vlanifs)
+                    </option>
+                  ))}
+                </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {popDevices.map((d) => {
+                    const isSelected = currentSwitch?.id === d.id;
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => handleSelectSwitch(d.id)}
+                        className={`p-3 rounded-xl border-2 text-left transition ${
+                          isSelected
+                            ? "border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60 shadow-sm"
+                            : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:border-indigo-400"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-extrabold text-xs text-slate-900 dark:text-white">
+                            {d.name}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              isSelected
+                                ? "bg-indigo-600 text-white"
+                                : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                            }`}
+                          >
+                            {isSelected ? "SELECIONADO" : "Escolher"}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-mono mt-1">
+                          {d.management_ip} • {d.vlan_count} VLANs •{" "}
+                          {d.vlanif_count} Vlanifs
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : currentSwitch ? (
+              <div className="p-3.5 rounded-xl border-2 border-emerald-500/70 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="font-mono font-extrabold text-sm text-slate-900 dark:text-white">
+                      {currentSwitch.name}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-extrabold">
+                      SWITCH ÚNICO DO POP
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-300 font-mono mt-1">
+                    IP: {currentSwitch.management_ip} • {currentSwitch.model} •{" "}
+                    {currentSwitch.vlan_count} VLANs •{" "}
+                    {currentSwitch.vlanif_count} Vlanifs
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
         </div>
       </div>
 
@@ -2713,19 +3138,74 @@ export function VlansAndVlanifsView({
 // 6. STATIC & DYNAMIC ROUTES MANAGEMENT VIEW (Section 9)
 // ============================================================================
 export function RoutesManagementView({
+  pops = [],
   routes,
   devices,
   userRole,
   onRefresh,
 }: {
+  pops?: Pop[];
   routes: StaticRoute[];
   devices: Device[];
   userRole: string;
   onRefresh: () => void;
 }) {
+  const initialPopId = pops[0]?.id || devices[0]?.pop_id || 1;
+  const initialSw =
+    devices.find((d) => d.pop_id === initialPopId) || devices[0];
+
+  const [selectedPopId, setSelectedPopId] = useState<number>(initialPopId);
+  const [selectedSwitchId, setSelectedSwitchId] = useState<number>(
+    initialSw?.id || 1
+  );
+
+  const popDevices = devices.filter((d) => d.pop_id === selectedPopId);
+  const currentSwitch =
+    devices.find((d) => d.id === selectedSwitchId) ||
+    popDevices[0] ||
+    devices[0];
+
+  const [cliQueryLoading, setCliQueryLoading] = useState(false);
+  const [cliRouteStaticOutput, setCliRouteStaticOutput] = useState<string>("");
+  const [cliRouteStaticLines, setCliRouteStaticLines] = useState<string[]>([]);
+
+  const fetchSwitchStaticRoutesCli = async (devId: number) => {
+    setCliQueryLoading(true);
+    try {
+      const res = await apiService.getDeviceStaticRoutesCli(devId);
+      setCliRouteStaticOutput(res.raw_cli_output || "");
+      setCliRouteStaticLines(res.cli_lines || []);
+    } catch (err: any) {
+      setCliRouteStaticOutput(`! Erro ao executar 'dis cu | include route-static': ${err.message}`);
+      setCliRouteStaticLines([]);
+    } finally {
+      setCliQueryLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (currentSwitch?.id) {
+      fetchSwitchStaticRoutesCli(currentSwitch.id);
+      setNewDeviceId(currentSwitch.id);
+    }
+  }, [currentSwitch?.id, routes.length]);
+
+  const handleSelectPop = (newPopId: number) => {
+    setSelectedPopId(newPopId);
+    const swInPop = devices.filter((d) => d.pop_id === newPopId);
+    if (swInPop.length > 0) {
+      setSelectedSwitchId(swInPop[0].id);
+      setNewDeviceId(swInPop[0].id);
+    }
+  };
+
+  const handleSelectSwitch = (newSwId: number) => {
+    setSelectedSwitchId(newSwId);
+    setNewDeviceId(newSwId);
+  };
+
   const [destFilter, setDestFilter] = useState("");
   const [nhFilter, setNhFilter] = useState("");
-  const [deviceFilter, setDeviceFilter] = useState("");
   const [protoFilter, setProtoFilter] = useState("");
   const [selectedRouteDetail, setSelectedRouteDetail] =
     useState<StaticRoute | null>(null);
@@ -2734,7 +3214,7 @@ export function RoutesManagementView({
   // New Route Form
   const l3Devices = devices.filter((d) => d.supports_l3_routing);
   const [newDeviceId, setNewDeviceId] = useState<number>(
-    l3Devices[0]?.id || devices[0]?.id || 1
+    initialSw?.id || l3Devices[0]?.id || 1
   );
   const [newDest, setNewDest] = useState("45.0.0.16");
   const [newCidr, setNewCidr] = useState(28);
@@ -2744,13 +3224,13 @@ export function RoutesManagementView({
   const [routeErr, setRouteErr] = useState<string | null>(null);
 
   const filtered = routes.filter((r) => {
+    if (currentSwitch && r.device_id !== currentSwitch.id) return false;
     if (
       destFilter &&
       !`${r.destination_network}/${r.cidr_prefix}`.includes(destFilter.trim())
     )
       return false;
     if (nhFilter && !r.next_hop.includes(nhFilter.trim())) return false;
-    if (deviceFilter && r.device_id !== Number(deviceFilter)) return false;
     if (protoFilter && r.protocol !== protoFilter) return false;
     return true;
   });
@@ -2770,6 +3250,7 @@ export function RoutesManagementView({
       });
       setShowAddModal(false);
       onRefresh();
+      if (currentSwitch) fetchSwitchStaticRoutesCli(currentSwitch.id);
     } catch (err: any) {
       setRouteErr(err.message);
     }
@@ -2785,6 +3266,7 @@ export function RoutesManagementView({
     try {
       await apiService.deleteRoute(r.id);
       onRefresh();
+      if (currentSwitch) fetchSwitchStaticRoutesCli(currentSwitch.id);
     } catch (err: any) {
       alert(err.message);
     }
@@ -2795,30 +3277,212 @@ export function RoutesManagementView({
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-            Gerenciamento de Rotas (Estáticas, Diretas, OSPF e BGP)
+            Rotas Estáticas no Switch (<code className="font-mono text-blue-600 dark:text-blue-400">dis cu | include route-static</code>)
           </h2>
           <p className="text-xs text-slate-500">
-            Consulte, filtre e gerencie rotas IPv4/IPv6 nos equipamentos Layer 3
-            da rede.
+            Escolha o <strong>POP</strong> e o <strong>Switch</strong> para
+            executar <code className="font-mono font-bold">dis cu | include route-static</code> e
+            visualizar todas as rotas estáticas configuradas no equipamento.
           </p>
         </div>
 
-        {userRole !== "readonly" && (
-          <button
-            type="button"
-            onClick={() => {
-              setRouteErr(null);
-              setShowAddModal(true);
-            }}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm"
-          >
-            <Plus className="w-4 h-4" /> Adicionar Rota Estática
-          </button>
-        )}
+        <div className="flex flex-wrap items-center gap-2">
+          {currentSwitch && (
+            <button
+              type="button"
+              disabled={cliQueryLoading}
+              onClick={() => fetchSwitchStaticRoutesCli(currentSwitch.id)}
+              className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg border border-emerald-500 bg-emerald-50 dark:bg-emerald-950/50 hover:bg-emerald-100 text-emerald-800 dark:text-emerald-300 text-xs font-extrabold shadow-sm transition"
+            >
+              <Terminal
+                className={`w-4 h-4 ${cliQueryLoading ? "animate-spin" : ""}`}
+              />
+              {cliQueryLoading
+                ? "Consultando Switch..."
+                : "Executar dis cu | include route-static"}
+            </button>
+          )}
+
+          {userRole !== "readonly" && (
+            <button
+              type="button"
+              onClick={() => {
+                setRouteErr(null);
+                if (currentSwitch) setNewDeviceId(currentSwitch.id);
+                setShowAddModal(true);
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm"
+            >
+              <Plus className="w-4 h-4" /> Adicionar Rota Estática em{" "}
+              {currentSwitch?.name || "Switch"}
+            </button>
+          )}
+        </div>
       </div>
 
+      {/* CAIXA DE SELEÇÃO: 1º ESCOLHER O POP -> MOSTRAR O SWITCH (OU ESCOLHER QUAL SWITCH SE HOUVER >1) */}
+      <div className="rounded-2xl border-2 border-blue-200 dark:border-blue-900/70 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
+          {/* Coluna 1: Escolher o POP */}
+          <div className="space-y-2.5">
+            <label className="block text-xs font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400">
+              1. Escolher o POP (Por Rolagem):
+            </label>
+            <select
+              value={selectedPopId}
+              onChange={(e) => handleSelectPop(Number(e.target.value))}
+              className="w-full rounded-xl border-2 border-blue-500 bg-blue-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+            >
+              {pops.map((p) => {
+                const swCount = devices.filter((d) => d.pop_id === p.id).length;
+                return (
+                  <option key={p.id} value={p.id}>
+                    {p.name} — {p.city}/{p.state} ({swCount}{" "}
+                    {swCount === 1 ? "Switch" : "Switches"})
+                  </option>
+                );
+              })}
+            </select>
+
+            <div className="flex flex-wrap gap-2 pt-1">
+              {pops.map((p) => {
+                const swCount = devices.filter((d) => d.pop_id === p.id).length;
+                const active = p.id === selectedPopId;
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => handleSelectPop(p.id)}
+                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${
+                      active
+                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
+                        : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50"
+                    }`}
+                  >
+                    <Building2 className="w-3.5 h-3.5" />
+                    <span>{p.name}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                        active
+                          ? "bg-white/20 text-white"
+                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                      }`}
+                    >
+                      {swCount} SW
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Coluna 2: Switch do POP Selecionado (ou Seletor quando > 1 Switch no POP) */}
+          <div className="space-y-2.5">
+            <label className="block text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
+              {popDevices.length > 1
+                ? `2. Este POP possui ${popDevices.length} Switches — Escolha qual Switch consultar:`
+                : "2. Switch do POP Selecionado (Carregado Automaticamente):"}
+            </label>
+
+            {popDevices.length > 1 ? (
+              <div className="space-y-2.5">
+                <select
+                  value={currentSwitch?.id || ""}
+                  onChange={(e) => handleSelectSwitch(Number(e.target.value))}
+                  className="w-full rounded-xl border-2 border-indigo-500 bg-indigo-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-mono font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+                >
+                  {popDevices.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {d.name} • {d.management_ip} ({d.route_count} rotas)
+                    </option>
+                  ))}
+                </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {popDevices.map((d) => {
+                    const isSelected = currentSwitch?.id === d.id;
+                    return (
+                      <button
+                        key={d.id}
+                        type="button"
+                        onClick={() => handleSelectSwitch(d.id)}
+                        className={`p-3 rounded-xl border-2 text-left transition ${
+                          isSelected
+                            ? "border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60 shadow-sm"
+                            : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:border-indigo-400"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-extrabold text-xs text-slate-900 dark:text-white">
+                            {d.name}
+                          </span>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              isSelected
+                                ? "bg-indigo-600 text-white"
+                                : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
+                            }`}
+                          >
+                            {isSelected ? "SELECIONADO" : "Escolher"}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-slate-500 font-mono mt-1">
+                          {d.management_ip} • {d.route_count} rotas
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : currentSwitch ? (
+              <div className="p-3.5 rounded-xl border-2 border-emerald-500/70 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                    <span className="font-mono font-extrabold text-sm text-slate-900 dark:text-white">
+                      {currentSwitch.name}
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-extrabold">
+                      SWITCH ÚNICO DO POP
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-600 dark:text-slate-300 font-mono mt-1">
+                    IP: {currentSwitch.management_ip} • {currentSwitch.model} •{" "}
+                    {currentSwitch.route_count} rotas
+                  </div>
+                </div>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      {/* TERMINAL DE SAÍDA DO SWITCH: dis cu | include route-static */}
+      {currentSwitch && (
+        <div className="rounded-xl border border-slate-800 bg-slate-950 text-slate-100 p-4 shadow-md space-y-2.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-2.5">
+            <div className="flex items-center gap-2 text-xs">
+              <Terminal className="w-4 h-4 text-emerald-400" />
+              <span className="font-mono font-extrabold text-emerald-400">
+                &lt;{currentSwitch.name}&gt; dis cu | include route-static
+              </span>
+              <span className="px-2 py-0.5 rounded bg-slate-800 text-slate-300 text-[10px] font-mono">
+                {cliRouteStaticLines.length} linha(s) route-static encontrada(s)
+              </span>
+            </div>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Host SSH: {currentSwitch.management_ip}:{currentSwitch.ssh_port}
+            </span>
+          </div>
+          <pre className="font-mono text-xs text-emerald-300 max-h-56 overflow-y-auto whitespace-pre-wrap bg-black/40 p-3 rounded-lg">
+            {cliQueryLoading
+              ? `Conectando em ${currentSwitch.name} (${currentSwitch.management_ip}) e executando 'dis cu | include route-static'...`
+              : cliRouteStaticOutput}
+          </pre>
+        </div>
+      )}
+
       {/* Filters Bar */}
-      <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-4 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
         <div>
           <label className="block text-[11px] font-semibold text-slate-500 mb-1">
             Filtrar por Destino
@@ -2842,23 +3506,6 @@ export function RoutesManagementView({
             placeholder="Ex.: 10.24.43.2"
             className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 text-xs font-mono"
           />
-        </div>
-        <div>
-          <label className="block text-[11px] font-semibold text-slate-500 mb-1">
-            Filtrar por Equipamento
-          </label>
-          <select
-            value={deviceFilter}
-            onChange={(e) => setDeviceFilter(e.target.value)}
-            className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 text-xs"
-          >
-            <option value="">Todos os Equipamentos</option>
-            {devices.map((d) => (
-              <option key={d.id} value={d.id}>
-                {d.name}
-              </option>
-            ))}
-          </select>
         </div>
         <div>
           <label className="block text-[11px] font-semibold text-slate-500 mb-1">

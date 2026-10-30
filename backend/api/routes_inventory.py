@@ -497,7 +497,7 @@ def create_device(
         supports_vrf=payload.supports_vrf,
         supports_two_phase_commit=payload.supports_two_phase_commit,
         is_simulated=payload.is_simulated,
-        last_synced_at=datetime.now(timezone.utc),
+        last_synced_at=None,
     )
     db.add(dev)
     db.flush()
@@ -1382,6 +1382,78 @@ def list_routes(
         )
         for r in routes
     ]
+
+
+@router.get("/devices/{device_id}/route-static-cli")
+def query_device_static_routes_cli(
+    device_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Executes 'dis cu | include route-static' on the selected Huawei Switch and returns
+    the raw CLI output alongside the static routes configured on that switch.
+    """
+    _ = current_user
+    dev = db.query(Device).filter(Device.id == device_id).first()
+    if not dev:
+        raise HTTPException(status_code=404, detail="Equipamento não encontrado.")
+
+    driver = HuaweiVRPDriver(dev)
+    cli_command = "dis cu | include route-static"
+    try:
+        raw_lines_str = driver.generate_display_output(cli_command, db=db)
+    except HuaweiSSHDriverError as exc:
+        raw_lines_str = f"! Erro ao consultar '{cli_command}' em {dev.name}: {exc}"
+
+    static_routes_db = (
+        db.query(StaticRoute)
+        .filter(StaticRoute.device_id == dev.id, StaticRoute.protocol == "Static")
+        .order_by(StaticRoute.destination_network)
+        .all()
+    )
+
+    cli_lines = [line.strip() for line in (raw_lines_str or "").splitlines() if line.strip()]
+    terminal_banner = (
+        f"<{dev.name}> {cli_command}\n"
+        + ("\n".join(cli_lines) if cli_lines else "! Nenhuma rota estática configurada (ip route-static) neste switch.")
+    )
+
+    return {
+        "device_id": dev.id,
+        "device_name": dev.name,
+        "pop_id": dev.pop_id,
+        "pop_name": dev.pop.name if dev.pop else "-",
+        "management_ip": dev.management_ip,
+        "model": dev.model,
+        "status": dev.status,
+        "supports_l3_routing": dev.supports_l3_routing,
+        "command": cli_command,
+        "raw_cli_output": terminal_banner,
+        "cli_lines": cli_lines,
+        "total_static_routes": len(static_routes_db),
+        "static_routes": [
+            StaticRouteOut(
+                id=r.id,
+                device_id=r.device_id,
+                device_name=dev.name,
+                pop_name=dev.pop.name if dev.pop else None,
+                ip_version=r.ip_version,
+                destination_network=r.destination_network,
+                cidr_prefix=r.cidr_prefix,
+                subnet_mask=r.subnet_mask,
+                next_hop=r.next_hop,
+                preference=r.preference,
+                description=r.description,
+                vrf_name=r.vrf_name,
+                protocol=r.protocol,
+                is_active=r.is_active,
+                discovered_config=r.discovered_config,
+                created_at=r.created_at,
+            )
+            for r in static_routes_db
+        ],
+    }
 
 
 @router.post("/routes", response_model=StaticRouteOut, status_code=status.HTTP_201_CREATED)

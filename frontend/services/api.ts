@@ -235,6 +235,22 @@ export const apiService = {
     const qs = params.toString();
     return apiRequest<StaticRoute[]>(`/routes${qs ? `?${qs}` : ""}`);
   },
+  getDeviceStaticRoutesCli: (deviceId: number) =>
+    apiRequest<{
+      device_id: number;
+      device_name: string;
+      pop_id: number;
+      pop_name: string;
+      management_ip: string;
+      model: string;
+      status: string;
+      supports_l3_routing: boolean;
+      command: string;
+      raw_cli_output: string;
+      cli_lines: string[];
+      total_static_routes: number;
+      static_routes: StaticRoute[];
+    }>(`/devices/${deviceId}/route-static-cli`),
   createRoute: (data: Record<string, unknown>) =>
     apiRequest<StaticRoute>("/routes", {
       method: "POST",

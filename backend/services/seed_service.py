@@ -287,6 +287,56 @@ def ensure_roles_users_and_customers(db: Session) -> None:
                 )
             )
 
+    if sw_montiro_02:
+        has_sync_backup = (
+            db.query(ConfigurationBackup)
+            .filter(ConfigurationBackup.device_id == sw_montiro_02.id)
+            .count()
+            > 0
+        )
+        if not has_sync_backup:
+            sw_montiro_02.last_synced_at = None
+        if (
+            db.query(StaticRoute)
+            .filter(StaticRoute.device_id == sw_montiro_02.id)
+            .count()
+            == 0
+        ):
+            db.add_all(
+                [
+                    StaticRoute(
+                        device_id=sw_montiro_02.id,
+                        ip_version=4,
+                        destination_network="0.0.0.0",
+                        cidr_prefix=0,
+                        subnet_mask="0.0.0.0",
+                        next_hop="10.255.1.1",
+                        preference=60,
+                        description="ROTA-DEFAULT-GATEWAY-MOTIRO",
+                        protocol="Static",
+                        is_active=True,
+                        discovered_config="ip route-static 0.0.0.0 0.0.0.0 10.255.1.1 description ROTA-DEFAULT-GATEWAY-MOTIRO",
+                        desired_config="ip route-static 0.0.0.0 0.0.0.0 10.255.1.1 description ROTA-DEFAULT-GATEWAY-MOTIRO",
+                        last_known_config="ip route-static 0.0.0.0 0.0.0.0 10.255.1.1 description ROTA-DEFAULT-GATEWAY-MOTIRO",
+                    ),
+                    StaticRoute(
+                        device_id=sw_montiro_02.id,
+                        ip_version=4,
+                        destination_network="45.0.20.0",
+                        cidr_prefix=30,
+                        subnet_mask="255.255.255.252",
+                        next_hop="10.24.20.2",
+                        preference=60,
+                        description="BLOCO-CLIENTE-MONTIRO-02",
+                        protocol="Static",
+                        is_active=True,
+                        discovered_config="ip route-static 45.0.20.0 255.255.255.252 10.24.20.2 description BLOCO-CLIENTE-MONTIRO-02",
+                        desired_config="ip route-static 45.0.20.0 255.255.255.252 10.24.20.2 description BLOCO-CLIENTE-MONTIRO-02",
+                        last_known_config="ip route-static 45.0.20.0 255.255.255.252 10.24.20.2 description BLOCO-CLIENTE-MONTIRO-02",
+                    ),
+                ]
+            )
+
     db.commit()
 
 
