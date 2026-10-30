@@ -2851,30 +2851,27 @@ export function RoutesManagementView({
 }
 
 // ============================================================================
-// 7. HISTORY, AUDIT LOGS & BACKUPS VIEW
+// 7. HISTÓRICO DE ALTERAÇÕES E LOGS DE AUDITORIA (SEM BACKUPS)
 // ============================================================================
 export function HistoryAndBackupsView({
   jobs,
   auditLogs,
-  backups,
 }: {
   jobs: any[];
   auditLogs: any[];
-  backups: any[];
+  backups?: any[];
 }) {
-  const [subTab, setSubTab] = useState<"jobs" | "audit" | "backups">("jobs");
-  const [selectedBackup, setSelectedBackup] = useState<any | null>(null);
+  const [subTab, setSubTab] = useState<"jobs" | "audit">("jobs");
 
   return (
     <div className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-            Histórico de Alterações, Auditoria & Backups VRP
+            Histórico de Alterações & Logs de Auditoria SSH
           </h2>
           <p className="text-xs text-slate-500">
-            Rastreabilidade completa de comandos executados por SSH, usuários e
-            snapshots de configuração antes de cada mudança.
+            Rastreabilidade completa de comandos executados por SSH e ações dos operadores. (Os Backups são exclusivos do Admin em Configurações).
           </p>
         </div>
 
@@ -2882,7 +2879,6 @@ export function HistoryAndBackupsView({
           {[
             { id: "jobs", label: `Jobs de Provisionamento (${jobs.length})` },
             { id: "audit", label: `Logs de Auditoria (${auditLogs.length})` },
-            { id: "backups", label: `Backups de Configuração (${backups.length})` },
           ].map((t) => (
             <button
               key={t.id}
@@ -2973,64 +2969,26 @@ export function HistoryAndBackupsView({
           </table>
         </div>
       )}
-
-      {subTab === "backups" && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {backups.map((b) => (
-            <div
-              key={b.id}
-              className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm space-y-2"
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-mono font-bold text-sm text-slate-900 dark:text-slate-100">
-                  Backup #{b.id} — {b.device_name}
-                </span>
-                <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[11px]">
-                  SHA256: {b.checksum}
-                </span>
-              </div>
-              <p className="text-xs text-slate-500">{b.comment}</p>
-              <button
-                type="button"
-                onClick={() => setSelectedBackup(b)}
-                className="text-xs font-semibold text-blue-600 hover:underline"
-              >
-                Visualizar current-configuration completo →
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {selectedBackup && (
-        <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-          <div className="w-full max-w-3xl rounded-xl bg-slate-950 border border-slate-800 text-slate-100 p-5 space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-              <h3 className="font-bold text-sm">
-                Backup #{selectedBackup.id} — {selectedBackup.device_name} (
-                {selectedBackup.checksum})
-              </h3>
-              <button type="button" onClick={() => setSelectedBackup(null)}>
-                <X className="w-4 h-4 text-slate-400" />
-              </button>
-            </div>
-            <pre className="font-mono text-xs text-emerald-300 max-h-[65vh] overflow-y-auto whitespace-pre-wrap">
-              {selectedBackup.config_content}
-            </pre>
-          </div>
-        </div>
-      )}
     </div>
   );
 }
 
 // ============================================================================
-// 8. ÁREA ADMIN FULL & CONFIGURAÇÕES RBAC (Sections 11 & 14)
+// 8. CONFIGURAÇÕES & CENTRAL EXCLUSIVA DO ADMIN:
+//    - CADASTRAR USUÁRIO & GESTÃO DE ACESSO (RBAC)
+//    - BACKUP DO SISTEMA (FAZER E BAIXAR)
+//    - BACKUP EM MODO TXT DO SWITCH (SSH "display cu" + COPIAR/BAIXAR TUDO)
 // ============================================================================
 export function SettingsAndSecurityView({
   currentUser,
+  devices = [],
+  savedSwitchBackups = [],
+  onRefresh,
 }: {
   currentUser: User;
+  devices?: Device[];
+  savedSwitchBackups?: any[];
+  onRefresh?: () => void;
 }) {
   const [users, setUsers] = useState<User[]>([]);
   const [settingsData, setSettingsData] = useState<Record<string, any> | null>(
@@ -3044,6 +3002,23 @@ export function SettingsAndSecurityView({
   const [uRole, setURole] = useState("operador");
   const [uErr, setUErr] = useState<string | null>(null);
 
+  // Admin Backup States
+  const [selectedDeviceId, setSelectedDeviceId] = useState<number>(
+    devices[0]?.id || 1
+  );
+  const [isCreatingSysBackup, setIsCreatingSysBackup] =
+    useState<boolean>(false);
+  const [sysBackupResult, setSysBackupResult] =
+    useState<SystemBackupResponse | null>(null);
+
+  const [isCreatingSwBackup, setIsCreatingSwBackup] = useState<boolean>(false);
+  const [isCreatingAllSwBackup, setIsCreatingAllSwBackup] =
+    useState<boolean>(false);
+  const [swBackupResult, setSwBackupResult] =
+    useState<SwitchBackupTxtResponse | null>(null);
+  const [copiedTxt, setCopiedTxt] = useState<boolean>(false);
+  const [backupErr, setBackupErr] = useState<string | null>(null);
+
   const loadUsersAndSettings = () => {
     apiService.getUsers().then(setUsers).catch(() => {});
     apiService.getSettings().then(setSettingsData).catch(() => {});
@@ -3052,6 +3027,28 @@ export function SettingsAndSecurityView({
   React.useEffect(() => {
     loadUsersAndSettings();
   }, []);
+
+  React.useEffect(() => {
+    if (devices.length > 0 && !devices.some((d) => d.id === selectedDeviceId)) {
+      setSelectedDeviceId(devices[0].id);
+    }
+  }, [devices, selectedDeviceId]);
+
+  const triggerBrowserDownload = (
+    filename: string,
+    content: string,
+    mimeType: string = "text/plain;charset=utf-8"
+  ) => {
+    const blob = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const handleToggleDemoMode = async () => {
     if (!settingsData) return;
@@ -3087,16 +3084,103 @@ export function SettingsAndSecurityView({
     }
   };
 
+  const handleAdminSystemBackup = async (format: "json" | "txt") => {
+    setIsCreatingSysBackup(true);
+    setBackupErr(null);
+    try {
+      const res = await apiService.createSystemBackup();
+      setSysBackupResult(res);
+      if (format === "json") {
+        triggerBrowserDownload(
+          res.filename,
+          res.backup_json_text,
+          "application/json;charset=utf-8"
+        );
+      } else {
+        triggerBrowserDownload(
+          res.filename.replace(".json", ".txt"),
+          res.backup_txt_summary,
+          "text/plain;charset=utf-8"
+        );
+      }
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      setBackupErr(err.message || "Falha ao gerar backup do sistema.");
+    } finally {
+      setIsCreatingSysBackup(false);
+    }
+  };
+
+  const handleAdminSwitchDisplayCuTxt = async () => {
+    if (!selectedDeviceId) return;
+    setIsCreatingSwBackup(true);
+    setBackupErr(null);
+    try {
+      const res = await apiService.createSwitchBackupTxt(selectedDeviceId);
+      setSwBackupResult(res);
+      triggerBrowserDownload(
+        res.filename,
+        res.config_txt,
+        "text/plain;charset=utf-8"
+      );
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      setBackupErr(
+        err.message || "Falha ao executar display cu e salvar TXT do switch."
+      );
+    } finally {
+      setIsCreatingSwBackup(false);
+    }
+  };
+
+  const handleAdminBackupAllSwitchesTxt = async () => {
+    if (devices.length === 0) return;
+    setIsCreatingAllSwBackup(true);
+    setBackupErr(null);
+    try {
+      const parts: string[] = [];
+      for (const sw of devices) {
+        const res = await apiService.createSwitchBackupTxt(sw.id);
+        parts.push(res.config_txt);
+      }
+      const unifiedTxt = parts.join("\n\n");
+      const nowStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+      triggerBrowserDownload(
+        `BACKUP-TODOS-SWITCHES-DISPLAY-CU-${nowStr}.txt`,
+        unifiedTxt,
+        "text/plain;charset=utf-8"
+      );
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      setBackupErr(
+        err.message || "Falha ao gerar backup unificado de todos os switches."
+      );
+    } finally {
+      setIsCreatingAllSwBackup(false);
+    }
+  };
+
+  const handleCopySwitchTxt = (txt: string) => {
+    navigator.clipboard.writeText(txt);
+    setCopiedTxt(true);
+    setTimeout(() => setCopiedTxt(false), 2000);
+  };
+
+  const currentSwitch =
+    devices.find((d) => d.id === selectedDeviceId) || devices[0];
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-            Área Admin Full — Gestão de Acessos (Admin, Supervisor e Operador)
+          <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
+            Painel Exclusivo do Administrador
+          </span>
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
+            Caixa de Configurações — Usuários, Gestão de Acesso & Central de Backups
           </h2>
           <p className="text-xs text-slate-500">
-            Controle de usuários, matriz de permissões por área e políticas de
-            execução SSH.
+            Cadastre usuários, gerencie permissões RBAC (Admin, Supervisor e Operador), faça o Backup Completo do Sistema e extraia o Backup em Modo .TXT dos Switches (`display cu`).
           </p>
         </div>
 
@@ -3104,26 +3188,248 @@ export function SettingsAndSecurityView({
           <button
             type="button"
             onClick={() => setShowUserModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md transition"
           >
-            <Plus className="w-4 h-4" /> Novo Usuário (Admin / Supervisor / Operador)
+            <Plus className="w-4 h-4" /> + Cadastrar Novo Usuário
           </button>
         )}
       </div>
 
-      {/* 3 RBAC Areas Explanation Cards */}
+      {backupErr && (
+        <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-300 dark:border-red-800 text-red-700 dark:text-red-200 text-xs font-semibold flex items-center gap-2.5">
+          <AlertTriangle className="w-4 h-4 shrink-0" />
+          <span>{backupErr}</span>
+        </div>
+      )}
+
+      {/* =====================================================================
+          CAIXA 1 (EXCLUSIVA ADMIN): CENTRAL DE BACKUPS
+          - BACKUP DO SISTEMA (FAZER E BAIXAR)
+          - BACKUP EM MODO TXT DO SWITCH (ACESSA O SWITCH, DÁ DISPLAY CU E COPIA/BAIXA TUDO)
+      ===================================================================== */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+        {/* SUB-CAIXA 1A: BACKUP DO SISTEMA (FAZER E BAIXAR) */}
+        <div className="rounded-2xl border-2 border-sky-300 dark:border-sky-800 bg-sky-50/85 dark:bg-sky-950/30 p-5 shadow-sm flex flex-col justify-between space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-sky-200 dark:border-sky-800/80 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-sky-600 text-white flex items-center justify-center shadow">
+                  <Database className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-300 block">
+                    Exclusivo Admin • Banco de Dados & Cadastros
+                  </span>
+                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                    1. Backup Completo do Sistema (Fazer e Baixar)
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-sky-950/85 dark:text-sky-200/85 leading-relaxed">
+              Gera um snapshot completo de todo o sistema contendo{" "}
+              <strong>
+                POPs, Equipamentos Huawei, Clientes, Portas Físicas, VLANs,
+                Gateways Vlanif e Rotas Estáticas
+              </strong>{" "}
+              e faz o download imediato para o seu computador.
+            </p>
+
+            {sysBackupResult && (
+              <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-sky-300 dark:border-sky-700 text-xs space-y-1">
+                <div className="font-extrabold text-sky-900 dark:text-sky-200 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  Último Backup Gerado: {sysBackupResult.filename}
+                </div>
+                <div className="text-[11px] text-slate-600 dark:text-slate-400">
+                  {sysBackupResult.counts.pops} POPs •{" "}
+                  {sysBackupResult.counts.devices} Switches •{" "}
+                  {sysBackupResult.counts.customers} Clientes •{" "}
+                  {sysBackupResult.counts.vlans} VLANs •{" "}
+                  {sysBackupResult.counts.routes} Rotas
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={() => handleAdminSystemBackup("json")}
+              disabled={isCreatingSysBackup}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-60 text-white text-xs font-extrabold shadow-md transition cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              {isCreatingSysBackup
+                ? "Gerando Backup..."
+                : "Fazer e Baixar Sistema (.JSON)"}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleAdminSystemBackup("txt")}
+              disabled={isCreatingSysBackup}
+              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-sky-600 text-sky-700 dark:text-sky-300 hover:bg-sky-100 text-xs font-extrabold shadow-sm transition cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              Fazer e Baixar Sistema (.TXT)
+            </button>
+          </div>
+        </div>
+
+        {/* SUB-CAIXA 1B: BACKUP EM MODO TXT DO SWITCH (DISPLAY CU + COPIAR TUDO) */}
+        <div className="rounded-2xl border-2 border-amber-300 dark:border-amber-800 bg-amber-50/85 dark:bg-amber-950/30 p-5 shadow-sm flex flex-col justify-between space-y-4">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-amber-200 dark:border-amber-800/80 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow">
+                  <HardDrive className="w-5 h-5" />
+                </div>
+                <div>
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 block">
+                    Exclusivo Admin • SSH &ldquo;display cu&rdquo; (current-configuration)
+                  </span>
+                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
+                    2. Backup em Modo .TXT do Switch (display cu)
+                  </h3>
+                </div>
+              </div>
+            </div>
+
+            <p className="text-xs text-amber-950/85 dark:text-amber-200/85 leading-relaxed">
+              O sistema acessa o switch Huawei via SSH, executa{" "}
+              <code className="font-mono font-bold bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded">
+                screen-length 0 temporary
+              </code>{" "}
+              +{" "}
+              <code className="font-mono font-bold bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded">
+                display cu
+              </code>
+              , copia 100% das configurações gerais do switch e salva em{" "}
+              <strong>.TXT</strong>.
+            </p>
+
+            <div>
+              <label className="block text-xs font-bold text-amber-950 dark:text-amber-200 mb-1">
+                Escolher o Switch Huawei:
+              </label>
+              <select
+                value={selectedDeviceId}
+                onChange={(e) => setSelectedDeviceId(Number(e.target.value))}
+                className="w-full rounded-xl border-2 border-amber-400 dark:border-amber-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+              >
+                {devices.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name} ({d.pop_name || "POP"}) — {d.model} • IP{" "}
+                    {d.management_ip}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+            <button
+              type="button"
+              onClick={handleAdminSwitchDisplayCuTxt}
+              disabled={isCreatingSwBackup || !currentSwitch}
+              className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white text-xs font-extrabold shadow-md transition cursor-pointer"
+            >
+              {isCreatingSwBackup ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Executando display cu...
+                </>
+              ) : (
+                <>
+                  <Download className="w-4 h-4" />
+                  Backup .TXT ({currentSwitch?.name})
+                </>
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleAdminBackupAllSwitchesTxt}
+              disabled={isCreatingAllSwBackup || devices.length === 0}
+              className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-amber-500 text-amber-800 dark:text-amber-300 hover:bg-amber-100 text-xs font-extrabold shadow-sm transition cursor-pointer"
+              title="Acessa todos os switches cadastrados em sequência e gera um único TXT consolidado"
+            >
+              {isCreatingAllSwBackup ? (
+                <>
+                  <RefreshCw className="w-4 h-4 animate-spin" />
+                  Copiando Todos...
+                </>
+              ) : (
+                <>
+                  <HardDrive className="w-4 h-4" />
+                  Backup .TXT de TODOS ({devices.length})
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* TERMINAL COM O RETORNO DO "DISPLAY CU" E BOTÃO COPIAR TUDO / BAIXAR TXT */}
+      {swBackupResult && (
+        <div className="rounded-2xl border-2 border-amber-400 dark:border-amber-700 bg-slate-950 p-5 shadow-lg space-y-3">
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
+            <div>
+              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 block">
+                Retorno Capturado do Switch via SSH (&ldquo;display cu&rdquo; / display current-configuration)
+              </span>
+              <h4 className="text-sm font-mono font-extrabold text-white">
+                {swBackupResult.filename} ({swBackupResult.size_bytes} bytes)
+              </h4>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={() => handleCopySwitchTxt(swBackupResult.config_txt)}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-extrabold border border-slate-700"
+              >
+                <FileCode2 className="w-3.5 h-3.5" />
+                {copiedTxt
+                  ? "Copiado para a Área de Transferência!"
+                  : "Copiar Tudo (TXT)"}
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  triggerBrowserDownload(
+                    swBackupResult.filename,
+                    swBackupResult.config_txt
+                  )
+                }
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold"
+              >
+                <Download className="w-3.5 h-3.5" />
+                Baixar Arquivo .TXT
+              </button>
+            </div>
+          </div>
+          <pre className="text-xs font-mono text-emerald-300 overflow-x-auto max-h-80 leading-relaxed p-2">
+            {swBackupResult.config_txt}
+          </pre>
+        </div>
+      )}
+
+      {/* =====================================================================
+          CAIXA 2: GESTÃO DE ACESSO (RBAC) & CADASTRAR USUÁRIOS
+      ===================================================================== */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
         <div className="rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/30 p-4 space-y-1.5">
           <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold text-[10px] uppercase">
             1. Área Admin (Acesso Full)
           </span>
           <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-            Controle Irrestrito do Sistema
+            Controle Irrestrito + Central de Backups
           </h4>
           <p className="text-slate-600 dark:text-slate-400">
             Acesso total a Clientes, POPs, Equipamentos, Portas, VLANs, IPs
-            Vlanif, Rotas Estáticas, Provisionamento SSH, Histórico/Backups e
-            Gestão de Usuários/Políticas.
+            Vlanif, Rotas Estáticas, Provisionamento SSH, Cadastro de Usuários e
+            Backups do Sistema/Switches.
           </p>
         </div>
 
@@ -3137,8 +3443,7 @@ export function SettingsAndSecurityView({
           <p className="text-slate-600 dark:text-slate-400">
             Acesso exclusivo para cadastrar, editar e gerenciar{" "}
             <strong>Clientes</strong>, <strong>Equipamentos Huawei</strong> e{" "}
-            <strong>POPs</strong>. Bloqueado para alterar VLANs/IPs/Rotas nas
-            portas.
+            <strong>POPs</strong>.
           </p>
         </div>
 
@@ -3152,70 +3457,27 @@ export function SettingsAndSecurityView({
           <p className="text-slate-600 dark:text-slate-400">
             Acesso focado em colocar e remover <strong>VLAN</strong>,{" "}
             <strong>IP (Vlanif)</strong>, <strong>Rota Estática</strong> e{" "}
-            <strong>atrelar Cliente/VLAN na porta física</strong>. Bloqueado
-            para cadastrar/remover switches ou usuários.
+            <strong>atrelar Cliente/VLAN na porta Livre</strong>.
           </p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* System & SSH Policies */}
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
-          <h3 className="font-bold text-sm flex items-center gap-2">
-            <Settings className="w-4 h-4 text-blue-600" />
-            Políticas de Operação SSH e Modo de Execução
-          </h3>
-          {settingsData && (
-            <div className="space-y-3 text-xs">
-              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
-                <div>
-                  <strong className="block text-slate-900 dark:text-slate-100">
-                    Modo de Demonstração (Simulador VRP)
-                  </strong>
-                  <span className="text-slate-500">
-                    Quando desativado (Produção), todas as conexões exigem SSH
-                    real via Netmiko.
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  disabled={currentUser.role.name !== "admin"}
-                  onClick={handleToggleDemoMode}
-                  className={`px-3 py-1.5 rounded-lg font-bold ${
-                    settingsData.demo_mode
-                      ? "bg-amber-500 text-slate-950"
-                      : "bg-emerald-600 text-white"
-                  }`}
-                >
-                  {settingsData.demo_mode
-                    ? "DEMO / SIMULAÇÃO ATIVO"
-                    : "PRODUÇÃO (SSH REAL)"}
-                </button>
-              </div>
-
-              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
-                <span>Timeout Padrão SSH (Netmiko)</span>
-                <strong className="font-mono">
-                  {settingsData.ssh_default_timeout} segundos
-                </strong>
-              </div>
-
-              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
-                <span>Criptografia de Credenciais em Repouso</span>
-                <strong className="text-emerald-600 font-mono">
-                  Fernet AES-128-CBC + HMAC-SHA256
-                </strong>
-              </div>
-            </div>
-          )}
-        </div>
-
         {/* Users & RBAC Roles */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
-          <h3 className="font-bold text-sm flex items-center gap-2">
-            <Shield className="w-4 h-4 text-blue-600" />
-            Usuários Cadastrados no Sistema
-          </h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm flex items-center gap-2">
+              <Shield className="w-4 h-4 text-blue-600" />
+              Usuários Cadastrados e Gestão de Acesso ({users.length})
+            </h3>
+            <button
+              type="button"
+              onClick={() => setShowUserModal(true)}
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold"
+            >
+              + Cadastrar Usuário
+            </button>
+          </div>
 
           <div className="space-y-2.5 text-xs">
             {users.map((u) => (
@@ -3243,6 +3505,73 @@ export function SettingsAndSecurityView({
                 >
                   {u.role.display_name}
                 </span>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* System & SSH Policies + Saved Switch TXT Backups */}
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
+          <h3 className="font-bold text-sm flex items-center gap-2">
+            <Settings className="w-4 h-4 text-blue-600" />
+            Políticas SSH & Histórico de Backups .TXT Salvos (
+            {savedSwitchBackups.length})
+          </h3>
+          {settingsData && (
+            <div className="space-y-2.5 text-xs">
+              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
+                <div>
+                  <strong className="block text-slate-900 dark:text-slate-100">
+                    Modo de Execução SSH
+                  </strong>
+                  <span className="text-slate-500">
+                    Alternar entre Simulador VRP e Produção SSH Real (Netmiko).
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  disabled={currentUser.role.name !== "admin"}
+                  onClick={handleToggleDemoMode}
+                  className={`px-3 py-1.5 rounded-lg font-bold ${
+                    settingsData.demo_mode
+                      ? "bg-amber-500 text-slate-950"
+                      : "bg-emerald-600 text-white"
+                  }`}
+                >
+                  {settingsData.demo_mode
+                    ? "DEMO / SIMULAÇÃO ATIVO"
+                    : "PRODUÇÃO (SSH REAL)"}
+                </button>
+              </div>
+            </div>
+          )}
+
+          <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+            {savedSwitchBackups.map((b: any) => (
+              <div
+                key={b.id}
+                className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
+              >
+                <div className="truncate pr-2">
+                  <span className="font-mono font-bold text-slate-900 dark:text-white">
+                    #{b.id} — {b.device_name || "Switch"}
+                  </span>
+                  <span className="block text-[11px] text-slate-500 truncate">
+                    {b.comment || b.backup_type}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() =>
+                    triggerBrowserDownload(
+                      `BACKUP-${b.device_name || "SWITCH"}-${b.id}.txt`,
+                      b.config_content || b.config_text || "# Sem conteúdo"
+                    )
+                  }
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shrink-0"
+                >
+                  <Download className="w-3 h-3" /> .TXT
+                </button>
               </div>
             ))}
           </div>
@@ -3277,7 +3606,7 @@ export function SettingsAndSecurityView({
                   className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 font-semibold"
                 >
                   <option value="admin">
-                    Admin (Acesso Full ao Sistema)
+                    Admin (Acesso Full ao Sistema + Backups)
                   </option>
                   <option value="supervisor">
                     Supervisor (Apenas Cadastrar Clientes e Equipamentos)

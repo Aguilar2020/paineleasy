@@ -386,14 +386,21 @@ def test_api_integration_end_to_end():
         assert import_data["customers_populated"] >= 3
         assert len(import_data["records"]) >= 3
 
-        # 8. Switch Full .TXT Backup & System Full Backup
-        sw_bkp_resp = client.post(
+        # 8. Switch Full .TXT Backup & System Full Backup (Restricted strictly to Admin)
+        op_bkp_forbidden = client.post(
             f"/api/v1/devices/{montiro['id']}/backup-txt",
             headers=op_headers,
+        )
+        assert op_bkp_forbidden.status_code == 403
+
+        sw_bkp_resp = client.post(
+            f"/api/v1/devices/{montiro['id']}/backup-txt",
+            headers=admin_headers,
         )
         assert sw_bkp_resp.status_code == 200, sw_bkp_resp.text
         sw_bkp = sw_bkp_resp.json()
         assert sw_bkp["filename"].endswith(".txt")
+        assert "display cu" in sw_bkp["config_txt"]
         assert "sysname SWITCH-MPLS-MONTIRO" in sw_bkp["config_txt"]
         assert "interface XGigabitEthernet0/0/39" in sw_bkp["config_txt"]
 

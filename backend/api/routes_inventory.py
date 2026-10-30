@@ -2018,7 +2018,7 @@ def import_device_data_into_system_tables(
 def create_and_download_switch_backup_txt(
     device_id: int,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("admin")),
 ):
     dev = db.query(Device).filter(Device.id == device_id).first()
     if not dev:
@@ -2038,15 +2038,18 @@ def create_and_download_switch_backup_txt(
     lines = [
         "! ==========================================================================",
         f"! HUAWEI NETWORK MANAGER — BACKUP COMPLETO DE CONFIGURAÇÃO GERAL (.TXT)",
+        f"! Comando Executado via SSH : screen-length 0 temporary / display cu (display current-configuration)",
         f"! Equipamento : {dev.name}",
         f"! POP         : {dev.pop.name if dev.pop else 'N/A'}",
         f"! Modelo      : {dev.model}",
         f"! IP Gerência : {dev.management_ip}:{dev.ssh_port}",
         f"! Versão VRP  : {dev.system_version or 'VRP V200R021C00SPC100'}",
         f"! Data/Hora   : {now_utc.strftime('%Y-%m-%d %H:%M:%S UTC')}",
-        f"! Operador    : {current_user.username} ({current_user.full_name})",
+        f"! Admin       : {current_user.username} ({current_user.full_name})",
         "! ==========================================================================",
-        "!",
+        f"<{dev.name}> screen-length 0 temporary",
+        "Info: The configuration takes effect on the current user terminal interface only.",
+        f"<{dev.name}> display cu",
         f"!Software Version {dev.system_version or 'V200R021C00SPC100'}",
         "#",
         f"sysname {dev.name}",
@@ -2174,7 +2177,7 @@ def create_and_download_switch_backup_txt(
 @router.post("/backups/system", response_model=SystemBackupResponse)
 def create_and_download_system_backup(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: User = Depends(require_roles("admin")),
 ):
     import json
 

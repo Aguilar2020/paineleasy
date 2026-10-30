@@ -121,15 +121,8 @@ const MENU_ITEMS: Array<{
   },
   {
     id: "analise",
-    label: "Análise de VLANs",
+    label: "Análise & Importar Switch",
     icon: Search,
-    highlight: true,
-    allowedRoles: ["admin", "supervisor", "operador"],
-  },
-  {
-    id: "backups",
-    label: "Backups & Importação",
-    icon: HardDrive,
     highlight: true,
     allowedRoles: ["admin", "supervisor", "operador"],
   },
@@ -141,8 +134,9 @@ const MENU_ITEMS: Array<{
   },
   {
     id: "configuracoes",
-    label: "Área Admin / Acessos",
+    label: "Configurações (Admin & Backups)",
     icon: Settings,
+    highlight: true,
     allowedRoles: ["admin"],
   },
 ];
@@ -790,25 +784,20 @@ export default function HuaweiNetworkManagerApp() {
             />
           )}
 
-          {activeNav === "backups" && (
-            <BackupsAndImportView
-              pops={pops}
-              devices={devices}
-              savedSwitchBackups={historyData.backups.data || []}
-              onRefresh={invalidateAll}
-            />
-          )}
-
           {activeNav === "historico" && (
             <HistoryAndBackupsView
               jobs={historyData.jobs.data || []}
               auditLogs={historyData.logs.data || []}
-              backups={historyData.backups.data || []}
             />
           )}
 
-          {activeNav === "configuracoes" && (
-            <SettingsAndSecurityView currentUser={currentUser} />
+          {activeNav === "configuracoes" && userRole === "admin" && (
+            <SettingsAndSecurityView
+              currentUser={currentUser}
+              devices={devices}
+              savedSwitchBackups={historyData.backups.data || []}
+              onRefresh={invalidateAll}
+            />
           )}
         </main>
       </div>
