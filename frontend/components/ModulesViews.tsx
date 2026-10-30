@@ -1369,7 +1369,8 @@ export function CustomersManagementView({
                   )}
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -2952,7 +2953,8 @@ export function RoutesManagementView({
                   )}
                 </td>
               </tr>
-            ))}
+              ))
+            )}
           </tbody>
         </table>
       </div>
