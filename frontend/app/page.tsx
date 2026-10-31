@@ -90,7 +90,7 @@ const MENU_ITEMS: Array<{
   },
   {
     id: "interfaces",
-    label: "Interfaces (Portas)",
+    label: "Interfaces",
     icon: Cpu,
     allowedRoles: ["admin", "operador"],
   },
@@ -108,7 +108,7 @@ const MENU_ITEMS: Array<{
   },
   {
     id: "rotas",
-    label: "Rotas estáticas",
+    label: "Rotas Estáticas",
     icon: Route,
     allowedRoles: ["admin", "operador"],
   },
@@ -116,27 +116,24 @@ const MENU_ITEMS: Array<{
     id: "provisionamento",
     label: "Provisionamento",
     icon: Sliders,
-    highlight: true,
     allowedRoles: ["admin", "operador"],
   },
   {
     id: "analise",
-    label: "Análise & Importar Switch",
+    label: "Análise & Importar",
     icon: Search,
-    highlight: true,
     allowedRoles: ["admin", "supervisor", "operador"],
   },
   {
     id: "historico",
-    label: "Histórico de alterações",
+    label: "Histórico",
     icon: History,
     allowedRoles: ["admin", "operador"],
   },
   {
     id: "configuracoes",
-    label: "Configurações (Admin & Backups)",
+    label: "Configurações & Backup",
     icon: Settings,
-    highlight: true,
     allowedRoles: ["admin"],
   },
 ];
@@ -385,52 +382,28 @@ export default function HuaweiNetworkManagerApp() {
   const routes = routesQuery.data || [];
 
   return (
-    <div className="min-h-screen flex bg-slate-100 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
-      {/* LEFT SIDEBAR */}
-      <aside className="w-64 shrink-0 border-r border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between">
+    <div className="min-h-screen flex bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+      {/* LEFT SIDEBAR — Clean Modern SaaS Navigation */}
+      <aside className="w-60 shrink-0 border-r border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 flex flex-col justify-between">
         <div>
           {/* Brand Logo */}
-          <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600 text-white font-bold flex items-center justify-center shadow-sm">
+          <div className="h-16 px-5 border-b border-slate-100 dark:border-slate-800 flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center shadow-sm text-sm">
               H
             </div>
             <div>
               <h1 className="font-bold text-sm leading-tight text-slate-900 dark:text-white">
                 Huawei Network
               </h1>
-              <span className="text-[11px] font-medium text-blue-600 dark:text-blue-400">
-                ISP Provisioning Panel
+              <span className="text-[11px] text-slate-400">
+                Painel NOC • ISP
               </span>
             </div>
           </div>
 
-          {/* Active Area Badge inside Sidebar */}
-          <div className="px-4 pt-3 pb-1">
-            <div
-              className={`px-3 py-2 rounded-lg text-[11px] font-bold border ${
-                userRole === "admin"
-                  ? "bg-blue-50 dark:bg-blue-950/60 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300"
-                  : userRole === "supervisor"
-                  ? "bg-purple-50 dark:bg-purple-950/60 border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300"
-                  : "bg-emerald-50 dark:bg-emerald-950/60 border-emerald-200 dark:border-emerald-800 text-emerald-700 dark:text-emerald-300"
-              }`}
-            >
-              <div className="uppercase tracking-wider text-[10px] opacity-80">
-                Área Ativa
-              </div>
-              <div className="text-xs mt-0.5">
-                {userRole === "admin"
-                  ? "Área Admin (Acesso Full)"
-                  : userRole === "supervisor"
-                  ? "Área Supervisor (Cadastros)"
-                  : "Área Operador (Provisionamento)"}
-              </div>
-            </div>
-          </div>
-
-          {/* Navigation Menu Filtered by Role Area */}
+          {/* Navigation Menu */}
           <nav className="p-3 space-y-1">
-            {visibleMenuItems.map((item, index) => {
+            {visibleMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeNav === item.id;
               return (
@@ -438,76 +411,38 @@ export default function HuaweiNetworkManagerApp() {
                   key={item.id}
                   type="button"
                   onClick={() => setActiveNav(item.id)}
-                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-xs font-semibold transition ${
+                  className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-medium transition ${
                     isActive
-                      ? "bg-blue-600 text-white shadow-sm"
-                      : item.highlight
-                      ? "bg-blue-50 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 hover:bg-blue-100"
-                      : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      ? "bg-blue-600 text-white font-semibold shadow-sm"
+                      : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/70 hover:text-slate-900 dark:hover:text-slate-100"
                   }`}
                 >
-                  <span className="flex items-center gap-2.5">
-                    <Icon className="w-4 h-4" />
-                    <span>
-                      {index + 1}. {item.label}
-                    </span>
-                  </span>
-                  {item.highlight && !isActive && (
-                    <span className="px-1.5 py-0.5 rounded bg-blue-600 text-white text-[9px] uppercase font-bold">
-                      VRP
-                    </span>
-                  )}
+                  <Icon className="w-4 h-4 shrink-0" />
+                  <span className="truncate">{item.label}</span>
                 </button>
               );
             })}
           </nav>
         </div>
 
-        {/* Sidebar Footer: Quick Area Switcher (Admin / Supervisor / Operador) */}
-        <div className="p-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5 text-xs">
-          <div className="text-[11px] font-semibold text-slate-400 uppercase">
-            Alternar Área de Acesso
-          </div>
-          <div className="grid grid-cols-1 gap-1.5">
+        {/* Sidebar Footer: Active User Info */}
+        <div className="p-4 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between gap-2">
+            <div className="min-w-0">
+              <div className="text-xs font-semibold text-slate-900 dark:text-slate-100 truncate">
+                {currentUser.full_name}
+              </div>
+              <div className="text-[11px] text-slate-400 truncate">
+                @{currentUser.username}
+              </div>
+            </div>
             <button
               type="button"
-              onClick={() => handleQuickSwitchProfile("admin", "dashboard")}
-              className={`py-1.5 px-2.5 rounded-lg text-left text-[11px] font-semibold border transition flex items-center justify-between ${
-                userRole === "admin"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                  : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-              }`}
+              onClick={handleLogout}
+              className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+              title="Encerrar sessão"
             >
-              <span>1. Área Admin</span>
-              <span className="text-[10px] opacity-85">Acesso Full</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickSwitchProfile("supervisor", "clientes")}
-              className={`py-1.5 px-2.5 rounded-lg text-left text-[11px] font-semibold border transition flex items-center justify-between ${
-                userRole === "supervisor"
-                  ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                  : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-              }`}
-            >
-              <span>2. Área Supervisor</span>
-              <span className="text-[10px] opacity-85">Clientes & Equip.</span>
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                handleQuickSwitchProfile("operador", "interfaces")
-              }
-              className={`py-1.5 px-2.5 rounded-lg text-left text-[11px] font-semibold border transition flex items-center justify-between ${
-                userRole === "operador"
-                  ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                  : "border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800"
-              }`}
-            >
-              <span>3. Área Operador</span>
-              <span className="text-[10px] opacity-85">
-                VLAN / IP / Rota / Porta
-              </span>
+              <LogOut className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -515,55 +450,59 @@ export default function HuaweiNetworkManagerApp() {
 
       {/* MAIN WORKSPACE */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* TOP HEADER BAR: Area Switcher Pills, System Status, Notifications, Theme & User */}
-        <header className="h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-xs font-bold text-slate-500 mr-1 hidden xl:inline">
-              Áreas do Sistema:
-            </span>
-            <button
-              type="button"
-              onClick={() => handleQuickSwitchProfile("admin", "dashboard")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                userRole === "admin"
-                  ? "bg-blue-600 text-white border-blue-600 shadow-sm"
-                  : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              Área Admin (Full)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickSwitchProfile("supervisor", "clientes")}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                userRole === "supervisor"
-                  ? "bg-purple-600 text-white border-purple-600 shadow-sm"
-                  : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              Área Supervisor (Clientes & Equipamentos)
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                handleQuickSwitchProfile("operador", "interfaces")
-              }
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition ${
-                userRole === "operador"
-                  ? "bg-emerald-600 text-white border-emerald-600 shadow-sm"
-                  : "bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:bg-slate-100"
-              }`}
-            >
-              Área Operador (VLAN, IP, Rota & Porta)
-            </button>
+        {/* TOP HEADER BAR — Clean & Uncluttered */}
+        <header className="h-16 border-b border-slate-200/80 dark:border-slate-800 bg-white/90 dark:bg-slate-900/90 backdrop-blur px-6 flex items-center justify-between gap-4 sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <h2 className="text-sm font-bold text-slate-800 dark:text-slate-100">
+              {MENU_ITEMS.find((m) => m.id === activeNav)?.label || "Painel"}
+            </h2>
           </div>
 
           <div className="flex items-center gap-3">
+            {/* Compact Segmented Role Switcher */}
+            <div className="inline-flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 p-1 text-xs">
+              <button
+                type="button"
+                onClick={() => handleQuickSwitchProfile("admin", "dashboard")}
+                className={`px-3 py-1 rounded-lg font-semibold transition ${
+                  userRole === "admin"
+                    ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                Admin
+              </button>
+              <button
+                type="button"
+                onClick={() => handleQuickSwitchProfile("supervisor", "clientes")}
+                className={`px-3 py-1 rounded-lg font-semibold transition ${
+                  userRole === "supervisor"
+                    ? "bg-white dark:bg-slate-900 text-purple-600 dark:text-purple-400 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                Supervisor
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  handleQuickSwitchProfile("operador", "interfaces")
+                }
+                className={`px-3 py-1 rounded-lg font-semibold transition ${
+                  userRole === "operador"
+                    ? "bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 shadow-sm"
+                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                }`}
+              >
+                Operador
+              </button>
+            </div>
+
             {/* Theme Toggle */}
             <button
               type="button"
               onClick={() => setDarkMode((d) => !d)}
-              className="p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
+              className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300 transition"
               title="Alternar tema claro/escuro"
             >
               {darkMode ? (
@@ -572,86 +511,11 @@ export default function HuaweiNetworkManagerApp() {
                 <Moon className="w-4 h-4" />
               )}
             </button>
-
-            {/* Notifications indicator */}
-            {userRole !== "supervisor" && (
-              <button
-                type="button"
-                onClick={() => setActiveNav("historico")}
-                className="relative p-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-300"
-                title="Últimas operações auditadas"
-              >
-                <Bell className="w-4 h-4" />
-                <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-blue-600" />
-              </button>
-            )}
-
-            {/* Active Operator Info */}
-            <div className="flex items-center gap-2.5 pl-3 border-l border-slate-200 dark:border-slate-800">
-              <div className="text-right">
-                <div className="text-xs font-bold text-slate-900 dark:text-slate-100 flex items-center gap-1.5 justify-end">
-                  <UserCheck className="w-3.5 h-3.5 text-blue-600" />
-                  {currentUser.full_name}
-                </div>
-                <span className="text-[11px] text-slate-500">
-                  Perfil: <strong>{currentUser.role.display_name}</strong>
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="p-2 rounded-lg text-slate-400 hover:text-red-600 hover:bg-slate-100 dark:hover:bg-slate-800"
-                title="Encerrar sessão"
-              >
-                <LogOut className="w-4 h-4" />
-              </button>
-            </div>
           </div>
         </header>
 
-        {/* ROLE SCOPE EXPLANATION BAR */}
-        <div
-          className={`px-6 py-2 text-xs font-medium border-b flex flex-wrap items-center justify-between gap-2 ${
-            userRole === "admin"
-              ? "bg-blue-50/80 dark:bg-blue-950/30 border-blue-200 dark:border-blue-900 text-blue-900 dark:text-blue-200"
-              : userRole === "supervisor"
-              ? "bg-purple-50/80 dark:bg-purple-950/30 border-purple-200 dark:border-purple-900 text-purple-900 dark:text-purple-200"
-              : "bg-emerald-50/80 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-900 text-emerald-900 dark:text-emerald-200"
-          }`}
-        >
-          <div>
-            {userRole === "admin" && (
-              <>
-                <strong>ÁREA ADMIN (ACESSO FULL):</strong> Permissão total para
-                gerenciar Usuários, POPs, Equipamentos, Clientes, Portas, VLANs,
-                IPs Vlanif, Rotas Estáticas e Provisionamento SSH.
-              </>
-            )}
-            {userRole === "supervisor" && (
-              <>
-                <strong>ÁREA SUPERVISOR:</strong> Acesso exclusivo para{" "}
-                <strong>Cadastrar/Editar Clientes</strong> e{" "}
-                <strong>Cadastrar/Gerenciar Equipamentos e POPs</strong>.
-                Operações de porta/VLAN/IP/Rota pertencem ao Operador.
-              </>
-            )}
-            {userRole === "operador" && (
-              <>
-                <strong>ÁREA OPERADOR:</strong> Acesso operacional para{" "}
-                <strong>Colocar e Remover VLAN</strong>,{" "}
-                <strong>Colocar e Remover IP (Vlanif)</strong>,{" "}
-                <strong>Colocar e Remover Rota Estática</strong> e{" "}
-                <strong>Selecionar Cliente para Atrelar VLAN na Porta</strong>.
-              </>
-            )}
-          </div>
-          <span className="inline-flex items-center gap-1 text-[11px] opacity-80">
-            <ShieldCheck className="w-3.5 h-3.5" /> Controle de Acesso RBAC Ativo
-          </span>
-        </div>
-
         {/* PAGE CONTENT */}
-        <main className="flex-1 p-6 overflow-y-auto max-w-[1600px] w-full mx-auto">
+        <main className="flex-1 p-6 overflow-y-auto max-w-[1440px] w-full mx-auto">
           {activeNav === "dashboard" && (
             <DashboardView
               summary={dashboardQuery.data}

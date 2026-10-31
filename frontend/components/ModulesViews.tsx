@@ -1055,196 +1055,96 @@ export function CustomersManagementView({
         )}
       </div>
 
-      {/* BARRA DE SELEÇÃO DE VISUALIZAÇÃO: GERAL | POR POP | POR SWITCH */}
-      <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-xs font-extrabold uppercase tracking-wider text-slate-500 mr-1 flex items-center gap-1.5">
-              <Filter className="w-3.5 h-3.5 text-blue-600" />
-              Visualizar Clientes:
-            </span>
-
+      {/* BARRA LIMPA DE FILTRO: GERAL | POR POP | POR SWITCH */}
+      <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="inline-flex items-center rounded-xl bg-slate-100 dark:bg-slate-800 p-1 text-xs">
             <button
               type="button"
               onClick={() => setFilterScope("geral")}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 ${
+              className={`px-3.5 py-1.5 rounded-lg font-semibold transition ${
                 filterScope === "geral"
-                  ? "bg-blue-600 text-white shadow-sm"
-                  : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200"
+                  ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
             >
-              <span>1. Geral (Todos)</span>
-              <span
-                className={`px-2 py-0.5 rounded-full text-[10px] ${
-                  filterScope === "geral"
-                    ? "bg-white/20 text-white"
-                    : "bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200"
-                }`}
-              >
-                {customers.length}
-              </span>
+              Geral ({customers.length})
             </button>
-
             <button
               type="button"
               onClick={() => setFilterScope("pop")}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 ${
+              className={`px-3.5 py-1.5 rounded-lg font-semibold transition ${
                 filterScope === "pop"
-                  ? "bg-sky-600 text-white shadow-sm"
-                  : "bg-sky-50 dark:bg-sky-950/40 border border-sky-200 dark:border-sky-800 text-sky-800 dark:text-sky-200 hover:bg-sky-100"
+                  ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
             >
-              <Building2 className="w-3.5 h-3.5" />
-              <span>2. Selecionar por POP</span>
+              Por POP
             </button>
-
             <button
               type="button"
               onClick={() => setFilterScope("switch")}
-              className={`px-4 py-2 rounded-xl text-xs font-extrabold transition flex items-center gap-2 ${
+              className={`px-3.5 py-1.5 rounded-lg font-semibold transition ${
                 filterScope === "switch"
-                  ? "bg-indigo-600 text-white shadow-sm"
-                  : "bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-800 dark:text-indigo-200 hover:bg-indigo-100"
+                  ? "bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-sm"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
               }`}
             >
-              <Server className="w-3.5 h-3.5" />
-              <span>3. Selecionar por Switch</span>
+              Por Switch
             </button>
           </div>
 
-          <div className="relative min-w-[260px] flex-1 max-w-sm">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={customerSearch}
-              onChange={(e) => setCustomerSearch(e.target.value)}
-              placeholder="Buscar cliente, código, CNPJ, VLAN ou porta..."
-              className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100"
-            />
-          </div>
-        </div>
-
-        {/* SELETOR QUANDO "POR POP" ESTIVER ATIVO */}
-        {filterScope === "pop" && (
-          <div className="pt-3 border-t border-sky-100 dark:border-sky-900/60 space-y-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <label className="text-xs font-extrabold text-sky-900 dark:text-sky-200">
-                Escolher POP por rolagem:
-              </label>
-              <select
-                value={selectedFilterPopId}
-                onChange={(e) => setSelectedFilterPopId(Number(e.target.value))}
-                className="rounded-xl border-2 border-sky-400 dark:border-sky-700 bg-sky-50/60 dark:bg-slate-900 px-3.5 py-2 text-xs font-extrabold text-slate-900 dark:text-slate-100 min-w-[260px]"
-              >
-                {pops.map((p) => {
-                  const countInPop = customers.filter(
-                    (c) => c.pop_id === p.id
-                  ).length;
-                  return (
-                    <option key={p.id} value={p.id}>
-                      {p.name} — {p.city}/{p.state} ({countInPop}{" "}
-                      {countInPop === 1 ? "cliente" : "clientes"})
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
+          {filterScope === "pop" && (
+            <select
+              value={selectedFilterPopId}
+              onChange={(e) => setSelectedFilterPopId(Number(e.target.value))}
+              className="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 py-2 text-xs font-semibold text-slate-900 dark:text-slate-100"
+            >
               {pops.map((p) => {
                 const countInPop = customers.filter(
                   (c) => c.pop_id === p.id
                 ).length;
-                const active = p.id === selectedFilterPopId;
                 return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => setSelectedFilterPopId(p.id)}
-                    className={`px-3.5 py-2 rounded-xl border-2 text-xs font-bold transition flex items-center gap-2 ${
-                      active
-                        ? "border-sky-600 bg-sky-600 text-white shadow-sm"
-                        : "border-sky-200 dark:border-sky-800 bg-sky-50/50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-sky-100"
-                    }`}
-                  >
-                    <span>{p.name}</span>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
-                        active
-                          ? "bg-white/20 text-white"
-                          : "bg-sky-100 dark:bg-sky-900 text-sky-800 dark:text-sky-200"
-                      }`}
-                    >
-                      {countInPop}
-                    </span>
-                  </button>
+                  <option key={p.id} value={p.id}>
+                    {p.name} — {p.city}/{p.state} ({countInPop})
+                  </option>
                 );
               })}
-            </div>
-          </div>
-        )}
+            </select>
+          )}
 
-        {/* SELETOR QUANDO "POR SWITCH" ESTIVER ATIVO */}
-        {filterScope === "switch" && (
-          <div className="pt-3 border-t border-indigo-100 dark:border-indigo-900/60 space-y-3">
-            <div className="flex flex-wrap items-center gap-3">
-              <label className="text-xs font-extrabold text-indigo-900 dark:text-indigo-200">
-                Escolher Switch por rolagem:
-              </label>
-              <select
-                value={selectedFilterSwitchId}
-                onChange={(e) =>
-                  setSelectedFilterSwitchId(Number(e.target.value))
-                }
-                className="rounded-xl border-2 border-indigo-400 dark:border-indigo-700 bg-indigo-50/60 dark:bg-slate-900 px-3.5 py-2 text-xs font-mono font-extrabold text-slate-900 dark:text-slate-100 min-w-[320px]"
-              >
-                {devices.map((d) => {
-                  const countInSw = customers.filter(
-                    (c) => c.device_id === d.id
-                  ).length;
-                  return (
-                    <option key={d.id} value={d.id}>
-                      {d.name} ({d.pop_name || "POP"}) — {d.management_ip} (
-                      {countInSw} {countInSw === 1 ? "cliente" : "clientes"})
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
-            <div className="flex flex-wrap gap-2">
+          {filterScope === "switch" && (
+            <select
+              value={selectedFilterSwitchId}
+              onChange={(e) =>
+                setSelectedFilterSwitchId(Number(e.target.value))
+              }
+              className="rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 py-2 text-xs font-mono font-semibold text-slate-900 dark:text-slate-100"
+            >
               {devices.map((d) => {
                 const countInSw = customers.filter(
                   (c) => c.device_id === d.id
                 ).length;
-                const active = d.id === selectedFilterSwitchId;
                 return (
-                  <button
-                    key={d.id}
-                    type="button"
-                    onClick={() => setSelectedFilterSwitchId(d.id)}
-                    className={`px-3.5 py-2 rounded-xl border-2 text-xs font-mono font-bold transition flex items-center gap-2 ${
-                      active
-                        ? "border-indigo-600 bg-indigo-600 text-white shadow-sm"
-                        : "border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:bg-indigo-100"
-                    }`}
-                  >
-                    <span>{d.name}</span>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-sans font-extrabold ${
-                        active
-                          ? "bg-white/20 text-white"
-                          : "bg-indigo-100 dark:bg-indigo-900 text-indigo-800 dark:text-indigo-200"
-                      }`}
-                    >
-                      {countInSw}
-                    </span>
-                  </button>
+                  <option key={d.id} value={d.id}>
+                    {d.name} ({d.pop_name || "POP"}) — {countInSw} cliente(s)
+                  </option>
                 );
               })}
-            </div>
-          </div>
-        )}
+            </select>
+          )}
+        </div>
+
+        <div className="relative min-w-[240px] flex-1 max-w-xs">
+          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <input
+            type="text"
+            value={customerSearch}
+            onChange={(e) => setCustomerSearch(e.target.value)}
+            placeholder="Buscar cliente, código, VLAN..."
+            className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-xs text-slate-900 dark:text-slate-100"
+          />
+        </div>
       </div>
 
       <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 overflow-hidden shadow-sm">
@@ -2249,140 +2149,61 @@ export function InterfacesVisualView({
         </div>
       </div>
 
-      {/* CAIXA DE SELEÇÃO: 1º ESCOLHER O POP -> MOSTRAR O SWITCH (OU ESCOLHER QUAL SWITCH SE HOUVER >1) */}
-      <div className="rounded-2xl border-2 border-blue-200 dark:border-blue-900/70 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-          {/* Coluna 1: Escolher o POP */}
-          <div className="space-y-2.5">
-            <label className="block text-xs font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400">
-              1. Escolher o POP (Por Rolagem):
-            </label>
+      {/* BARRA COMPACTA: 1º ESCOLHER O POP -> MOSTRAR O SWITCH (OU ESCOLHER QUAL SWITCH SE HOUVER >1) */}
+      <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+        <div className="space-y-1">
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            1. Escolher o POP
+          </label>
+          <select
+            value={selectedPopId}
+            onChange={(e) => handleSelectPop(Number(e.target.value))}
+            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-slate-900 dark:text-slate-100"
+          >
+            {pops.map((p) => {
+              const swCount = devices.filter((d) => d.pop_id === p.id).length;
+              return (
+                <option key={p.id} value={p.id}>
+                  {p.name} — {p.city}/{p.state} ({swCount}{" "}
+                  {swCount === 1 ? "Switch" : "Switches"})
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            {popDevices.length > 1
+              ? `2. Escolher qual Switch do POP (${popDevices.length} disponíveis)`
+              : "2. Switch do POP"}
+          </label>
+          {popDevices.length > 1 ? (
             <select
-              value={selectedPopId}
-              onChange={(e) => handleSelectPop(Number(e.target.value))}
-              className="w-full rounded-xl border-2 border-blue-500 bg-blue-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+              value={currentDevice?.id || ""}
+              onChange={(e) => onSelectDeviceId(Number(e.target.value))}
+              className="w-full rounded-xl border border-blue-400 dark:border-blue-700 bg-blue-50/40 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-mono font-bold text-slate-900 dark:text-slate-100"
             >
-              {pops.map((p) => {
-                const swCount = devices.filter((d) => d.pop_id === p.id).length;
-                return (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — {p.city}/{p.state} ({swCount}{" "}
-                    {swCount === 1 ? "Switch" : "Switches"})
-                  </option>
-                );
-              })}
+              {popDevices.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name} • {d.management_ip} ({d.interface_count} portas)
+                </option>
+              ))}
             </select>
-
-            <div className="flex flex-wrap gap-2 pt-1">
-              {pops.map((p) => {
-                const swCount = devices.filter((d) => d.pop_id === p.id).length;
-                const active = p.id === selectedPopId;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => handleSelectPop(p.id)}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${
-                      active
-                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                        : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50"
-                    }`}
-                  >
-                    <Building2 className="w-3.5 h-3.5" />
-                    <span>{p.name}</span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                        active
-                          ? "bg-white/20 text-white"
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                      }`}
-                    >
-                      {swCount} SW
-                    </span>
-                  </button>
-                );
-              })}
+          ) : currentDevice ? (
+            <div className="px-3.5 py-2 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 font-mono font-bold text-slate-900 dark:text-white">
+                <Server className="w-4 h-4 text-emerald-600" />
+                <span>{currentDevice.name}</span>
+                <span className="text-slate-500 font-normal">
+                  ({currentDevice.management_ip})
+                </span>
+              </div>
+              <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                {currentDevice.interface_count} portas
+              </span>
             </div>
-          </div>
-
-          {/* Coluna 2: Switch do POP Selecionado (ou Seletor quando > 1 Switch no POP) */}
-          <div className="space-y-2.5">
-            <label className="block text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
-              {popDevices.length > 1
-                ? `2. Este POP possui ${popDevices.length} Switches — Escolha qual Switch operar:`
-                : "2. Switch do POP Selecionado (Carregado Automaticamente):"}
-            </label>
-
-            {popDevices.length > 1 ? (
-              <div className="space-y-2.5">
-                <select
-                  value={currentDevice?.id || ""}
-                  onChange={(e) => onSelectDeviceId(Number(e.target.value))}
-                  className="w-full rounded-xl border-2 border-indigo-500 bg-indigo-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-mono font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
-                >
-                  {popDevices.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name} • {d.management_ip} ({d.model} —{" "}
-                      {d.interface_count} portas)
-                    </option>
-                  ))}
-                </select>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {popDevices.map((d) => {
-                    const isSelected = currentDevice?.id === d.id;
-                    return (
-                      <button
-                        key={d.id}
-                        type="button"
-                        onClick={() => onSelectDeviceId(d.id)}
-                        className={`p-3 rounded-xl border-2 text-left transition ${
-                          isSelected
-                            ? "border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60 shadow-sm"
-                            : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:border-indigo-400"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-extrabold text-xs text-slate-900 dark:text-white">
-                            {d.name}
-                          </span>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              isSelected
-                                ? "bg-indigo-600 text-white"
-                                : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                            }`}
-                          >
-                            {isSelected ? "SELECIONADO" : "Escolher"}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 font-mono mt-1">
-                          {d.management_ip} • {d.interface_count} portas
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : currentDevice ? (
-              <div className="p-3.5 rounded-xl border-2 border-emerald-500/70 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="font-mono font-extrabold text-sm text-slate-900 dark:text-white">
-                      {currentDevice.name}
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-extrabold">
-                      SWITCH ÚNICO DO POP
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-300 font-mono mt-1">
-                    IP: {currentDevice.management_ip} • {currentDevice.model} •{" "}
-                    {currentDevice.interface_count} portas
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
+          ) : null}
         </div>
       </div>
 
@@ -2708,142 +2529,63 @@ export function VlansAndVlanifsView({
         </div>
       </div>
 
-      {/* CAIXA DE SELEÇÃO: 1º ESCOLHER O POP -> MOSTRAR O SWITCH (OU ESCOLHER QUAL SWITCH SE HOUVER >1) */}
-      <div className="rounded-2xl border-2 border-blue-200 dark:border-blue-900/70 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-          {/* Coluna 1: Escolher o POP */}
-          <div className="space-y-2.5">
-            <label className="block text-xs font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400">
-              1. Escolher o POP (Por Rolagem):
-            </label>
+      {/* BARRA COMPACTA: 1º ESCOLHER O POP -> MOSTRAR O SWITCH (OU ESCOLHER QUAL SWITCH SE HOUVER >1) */}
+      <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+        <div className="space-y-1">
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            1. Escolher o POP
+          </label>
+          <select
+            value={selectedPopId}
+            onChange={(e) => handleSelectPop(Number(e.target.value))}
+            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-slate-900 dark:text-slate-100"
+          >
+            {pops.map((p) => {
+              const swCount = devices.filter((d) => d.pop_id === p.id).length;
+              return (
+                <option key={p.id} value={p.id}>
+                  {p.name} — {p.city}/{p.state} ({swCount}{" "}
+                  {swCount === 1 ? "Switch" : "Switches"})
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            {popDevices.length > 1
+              ? `2. Escolher qual Switch do POP (${popDevices.length} disponíveis)`
+              : "2. Switch do POP"}
+          </label>
+          {popDevices.length > 1 ? (
             <select
-              value={selectedPopId}
-              onChange={(e) => handleSelectPop(Number(e.target.value))}
-              className="w-full rounded-xl border-2 border-blue-500 bg-blue-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+              value={currentSwitch?.id || ""}
+              onChange={(e) => handleSelectSwitch(Number(e.target.value))}
+              className="w-full rounded-xl border border-blue-400 dark:border-blue-700 bg-blue-50/40 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-mono font-bold text-slate-900 dark:text-slate-100"
             >
-              {pops.map((p) => {
-                const swCount = devices.filter((d) => d.pop_id === p.id).length;
-                return (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — {p.city}/{p.state} ({swCount}{" "}
-                    {swCount === 1 ? "Switch" : "Switches"})
-                  </option>
-                );
-              })}
+              {popDevices.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name} • {d.management_ip} ({d.vlan_count} VLANs •{" "}
+                  {d.vlanif_count} Vlanifs)
+                </option>
+              ))}
             </select>
-
-            <div className="flex flex-wrap gap-2 pt-1">
-              {pops.map((p) => {
-                const swCount = devices.filter((d) => d.pop_id === p.id).length;
-                const active = p.id === selectedPopId;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => handleSelectPop(p.id)}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${
-                      active
-                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                        : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50"
-                    }`}
-                  >
-                    <Building2 className="w-3.5 h-3.5" />
-                    <span>{p.name}</span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                        active
-                          ? "bg-white/20 text-white"
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                      }`}
-                    >
-                      {swCount} SW
-                    </span>
-                  </button>
-                );
-              })}
+          ) : currentSwitch ? (
+            <div className="px-3.5 py-2 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 font-mono font-bold text-slate-900 dark:text-white">
+                <Server className="w-4 h-4 text-emerald-600" />
+                <span>{currentSwitch.name}</span>
+                <span className="text-slate-500 font-normal">
+                  ({currentSwitch.management_ip})
+                </span>
+              </div>
+              <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                {currentSwitch.vlan_count} VLANs • {currentSwitch.vlanif_count}{" "}
+                Vlanifs
+              </span>
             </div>
-          </div>
-
-          {/* Coluna 2: Switch do POP Selecionado (ou Seletor quando > 1 Switch no POP) */}
-          <div className="space-y-2.5">
-            <label className="block text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
-              {popDevices.length > 1
-                ? `2. Este POP possui ${popDevices.length} Switches — Escolha qual Switch:`
-                : "2. Switch do POP Selecionado (Carregado Automaticamente):"}
-            </label>
-
-            {popDevices.length > 1 ? (
-              <div className="space-y-2.5">
-                <select
-                  value={currentSwitch?.id || ""}
-                  onChange={(e) => handleSelectSwitch(Number(e.target.value))}
-                  className="w-full rounded-xl border-2 border-indigo-500 bg-indigo-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-mono font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
-                >
-                  {popDevices.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name} • {d.management_ip} ({d.vlan_count} VLANs •{" "}
-                      {d.vlanif_count} Vlanifs)
-                    </option>
-                  ))}
-                </select>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {popDevices.map((d) => {
-                    const isSelected = currentSwitch?.id === d.id;
-                    return (
-                      <button
-                        key={d.id}
-                        type="button"
-                        onClick={() => handleSelectSwitch(d.id)}
-                        className={`p-3 rounded-xl border-2 text-left transition ${
-                          isSelected
-                            ? "border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60 shadow-sm"
-                            : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:border-indigo-400"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-extrabold text-xs text-slate-900 dark:text-white">
-                            {d.name}
-                          </span>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              isSelected
-                                ? "bg-indigo-600 text-white"
-                                : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                            }`}
-                          >
-                            {isSelected ? "SELECIONADO" : "Escolher"}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 font-mono mt-1">
-                          {d.management_ip} • {d.vlan_count} VLANs •{" "}
-                          {d.vlanif_count} Vlanifs
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : currentSwitch ? (
-              <div className="p-3.5 rounded-xl border-2 border-emerald-500/70 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="font-mono font-extrabold text-sm text-slate-900 dark:text-white">
-                      {currentSwitch.name}
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-extrabold">
-                      SWITCH ÚNICO DO POP
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-300 font-mono mt-1">
-                    IP: {currentSwitch.management_ip} • {currentSwitch.model} •{" "}
-                    {currentSwitch.vlan_count} VLANs •{" "}
-                    {currentSwitch.vlanif_count} Vlanifs
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
+          ) : null}
         </div>
       </div>
 
@@ -3320,139 +3062,61 @@ export function RoutesManagementView({
         </div>
       </div>
 
-      {/* CAIXA DE SELEÇÃO: 1º ESCOLHER O POP -> MOSTRAR O SWITCH (OU ESCOLHER QUAL SWITCH SE HOUVER >1) */}
-      <div className="rounded-2xl border-2 border-blue-200 dark:border-blue-900/70 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 items-start">
-          {/* Coluna 1: Escolher o POP */}
-          <div className="space-y-2.5">
-            <label className="block text-xs font-extrabold uppercase tracking-wider text-blue-700 dark:text-blue-400">
-              1. Escolher o POP (Por Rolagem):
-            </label>
+      {/* BARRA COMPACTA: 1º ESCOLHER O POP -> MOSTRAR O SWITCH (OU ESCOLHER QUAL SWITCH SE HOUVER >1) */}
+      <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+        <div className="space-y-1">
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            1. Escolher o POP
+          </label>
+          <select
+            value={selectedPopId}
+            onChange={(e) => handleSelectPop(Number(e.target.value))}
+            className="w-full rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-bold text-slate-900 dark:text-slate-100"
+          >
+            {pops.map((p) => {
+              const swCount = devices.filter((d) => d.pop_id === p.id).length;
+              return (
+                <option key={p.id} value={p.id}>
+                  {p.name} — {p.city}/{p.state} ({swCount}{" "}
+                  {swCount === 1 ? "Switch" : "Switches"})
+                </option>
+              );
+            })}
+          </select>
+        </div>
+
+        <div className="space-y-1">
+          <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-500">
+            {popDevices.length > 1
+              ? `2. Escolher qual Switch do POP (${popDevices.length} disponíveis)`
+              : "2. Switch do POP"}
+          </label>
+          {popDevices.length > 1 ? (
             <select
-              value={selectedPopId}
-              onChange={(e) => handleSelectPop(Number(e.target.value))}
-              className="w-full rounded-xl border-2 border-blue-500 bg-blue-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+              value={currentSwitch?.id || ""}
+              onChange={(e) => handleSelectSwitch(Number(e.target.value))}
+              className="w-full rounded-xl border border-blue-400 dark:border-blue-700 bg-blue-50/40 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-mono font-bold text-slate-900 dark:text-slate-100"
             >
-              {pops.map((p) => {
-                const swCount = devices.filter((d) => d.pop_id === p.id).length;
-                return (
-                  <option key={p.id} value={p.id}>
-                    {p.name} — {p.city}/{p.state} ({swCount}{" "}
-                    {swCount === 1 ? "Switch" : "Switches"})
-                  </option>
-                );
-              })}
+              {popDevices.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.name} • {d.management_ip} ({d.route_count} rotas)
+                </option>
+              ))}
             </select>
-
-            <div className="flex flex-wrap gap-2 pt-1">
-              {pops.map((p) => {
-                const swCount = devices.filter((d) => d.pop_id === p.id).length;
-                const active = p.id === selectedPopId;
-                return (
-                  <button
-                    key={p.id}
-                    type="button"
-                    onClick={() => handleSelectPop(p.id)}
-                    className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition flex items-center gap-1.5 ${
-                      active
-                        ? "border-blue-600 bg-blue-600 text-white shadow-sm"
-                        : "border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-blue-50"
-                    }`}
-                  >
-                    <Building2 className="w-3.5 h-3.5" />
-                    <span>{p.name}</span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                        active
-                          ? "bg-white/20 text-white"
-                          : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                      }`}
-                    >
-                      {swCount} SW
-                    </span>
-                  </button>
-                );
-              })}
+          ) : currentSwitch ? (
+            <div className="px-3.5 py-2 rounded-xl border border-emerald-200 dark:border-emerald-800/80 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2 font-mono font-bold text-slate-900 dark:text-white">
+                <Server className="w-4 h-4 text-emerald-600" />
+                <span>{currentSwitch.name}</span>
+                <span className="text-slate-500 font-normal">
+                  ({currentSwitch.management_ip})
+                </span>
+              </div>
+              <span className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+                {currentSwitch.route_count} rotas
+              </span>
             </div>
-          </div>
-
-          {/* Coluna 2: Switch do POP Selecionado (ou Seletor quando > 1 Switch no POP) */}
-          <div className="space-y-2.5">
-            <label className="block text-xs font-extrabold uppercase tracking-wider text-indigo-700 dark:text-indigo-400">
-              {popDevices.length > 1
-                ? `2. Este POP possui ${popDevices.length} Switches — Escolha qual Switch consultar:`
-                : "2. Switch do POP Selecionado (Carregado Automaticamente):"}
-            </label>
-
-            {popDevices.length > 1 ? (
-              <div className="space-y-2.5">
-                <select
-                  value={currentSwitch?.id || ""}
-                  onChange={(e) => handleSelectSwitch(Number(e.target.value))}
-                  className="w-full rounded-xl border-2 border-indigo-500 bg-indigo-50/50 dark:bg-slate-800 px-3.5 py-2.5 text-xs font-mono font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
-                >
-                  {popDevices.map((d) => (
-                    <option key={d.id} value={d.id}>
-                      {d.name} • {d.management_ip} ({d.route_count} rotas)
-                    </option>
-                  ))}
-                </select>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {popDevices.map((d) => {
-                    const isSelected = currentSwitch?.id === d.id;
-                    return (
-                      <button
-                        key={d.id}
-                        type="button"
-                        onClick={() => handleSelectSwitch(d.id)}
-                        className={`p-3 rounded-xl border-2 text-left transition ${
-                          isSelected
-                            ? "border-indigo-600 bg-indigo-50/80 dark:bg-indigo-950/60 shadow-sm"
-                            : "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 hover:border-indigo-400"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-extrabold text-xs text-slate-900 dark:text-white">
-                            {d.name}
-                          </span>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                              isSelected
-                                ? "bg-indigo-600 text-white"
-                                : "bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300"
-                            }`}
-                          >
-                            {isSelected ? "SELECIONADO" : "Escolher"}
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-slate-500 font-mono mt-1">
-                          {d.management_ip} • {d.route_count} rotas
-                        </div>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            ) : currentSwitch ? (
-              <div className="p-3.5 rounded-xl border-2 border-emerald-500/70 bg-emerald-50/50 dark:bg-emerald-950/30 flex items-center justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <Server className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
-                    <span className="font-mono font-extrabold text-sm text-slate-900 dark:text-white">
-                      {currentSwitch.name}
-                    </span>
-                    <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-extrabold">
-                      SWITCH ÚNICO DO POP
-                    </span>
-                  </div>
-                  <div className="text-xs text-slate-600 dark:text-slate-300 font-mono mt-1">
-                    IP: {currentSwitch.management_ip} • {currentSwitch.model} •{" "}
-                    {currentSwitch.route_count} rotas
-                  </div>
-                </div>
-              </div>
-            ) : null}
-          </div>
+          ) : null}
         </div>
       </div>
 
@@ -4077,18 +3741,33 @@ export function SettingsAndSecurityView({
   const currentSwitch =
     devices.find((d) => d.id === selectedDeviceId) || devices[0];
 
+  const getEquipmentTypeLabel = (d?: any) => {
+    if (!d) return "Equipamento";
+    const modelUpper = (d.model || "").toUpperCase();
+    const nameUpper = (d.name || "").toUpperCase();
+    if (
+      modelUpper.includes("NETENGINE") ||
+      modelUpper.includes("NE8000") ||
+      modelUpper.includes("NE40") ||
+      modelUpper.includes("ROUTER") ||
+      nameUpper.startsWith("BNG") ||
+      nameUpper.startsWith("RT") ||
+      nameUpper.includes("ROTEADOR")
+    ) {
+      return "Roteador";
+    }
+    return "Switch";
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <span className="text-[11px] font-extrabold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
-            Painel Exclusivo do Administrador
-          </span>
-          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-100">
-            Caixa de Configurações — Usuários, Gestão de Acesso & Central de Backups
+          <h2 className="text-lg font-bold text-slate-900 dark:text-slate-100">
+            Configurações & Central de Backups
           </h2>
           <p className="text-xs text-slate-500">
-            Cadastre usuários, gerencie permissões RBAC (Admin, Supervisor e Operador), faça o Backup Completo do Sistema e extraia o Backup em Modo .TXT dos Switches (`display cu`).
+            Backup completo do sistema, backup de equipamentos (Switch ou Roteador via SSH <code className="font-mono">display cu</code>) e gestão de usuários.
           </p>
         </div>
 
@@ -4096,162 +3775,133 @@ export function SettingsAndSecurityView({
           <button
             type="button"
             onClick={() => setShowUserModal(true)}
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold shadow-md transition"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition cursor-pointer"
           >
-            <Plus className="w-4 h-4" /> + Cadastrar Novo Usuário
+            <Plus className="w-4 h-4" /> Novo Usuário
           </button>
         )}
       </div>
 
       {backupErr && (
-        <div className="p-4 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-300 dark:border-red-800 text-red-700 dark:text-red-200 text-xs font-semibold flex items-center gap-2.5">
+        <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/60 border border-red-200 dark:border-red-800 text-red-700 dark:text-red-200 text-xs font-medium flex items-center gap-2.5">
           <AlertTriangle className="w-4 h-4 shrink-0" />
           <span>{backupErr}</span>
         </div>
       )}
 
-      {/* =====================================================================
-          CAIXA 1 (EXCLUSIVA ADMIN): CENTRAL DE BACKUPS
-          - BACKUP DO SISTEMA (FAZER E BAIXAR)
-          - BACKUP EM MODO TXT DO SWITCH (ACESSA O SWITCH, DÁ DISPLAY CU E COPIA/BAIXA TUDO)
-      ===================================================================== */}
+      {/* CENTRAL DE BACKUPS: 1. BACKUP DO SISTEMA | 2. BACKUP DO EQUIPAMENTO (SWITCH OU ROTEADOR) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-        {/* SUB-CAIXA 1A: BACKUP DO SISTEMA (FAZER E BAIXAR) */}
-        <div className="rounded-2xl border-2 border-sky-300 dark:border-sky-800 bg-sky-50/85 dark:bg-sky-950/30 p-5 shadow-sm flex flex-col justify-between space-y-4">
+        {/* CARD 1: BACKUP DO SISTEMA */}
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm flex flex-col justify-between space-y-4">
           <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-sky-200 dark:border-sky-800/80 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-sky-600 text-white flex items-center justify-center shadow">
-                  <Database className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-sky-700 dark:text-sky-300 block">
-                    Exclusivo Admin • Banco de Dados & Cadastros
-                  </span>
-                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                    1. Backup Completo do Sistema (Fazer e Baixar)
-                  </h3>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-950/80 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 flex items-center justify-center">
+                <Database className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400 block">
+                  Banco de Dados & Inventário
+                </span>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  1. Backup do Sistema
+                </h3>
               </div>
             </div>
 
-            <p className="text-xs text-sky-950/85 dark:text-sky-200/85 leading-relaxed">
-              Gera um snapshot completo de todo o sistema contendo{" "}
-              <strong>
-                POPs, Equipamentos Huawei, Clientes, Portas Físicas, VLANs,
-                Gateways Vlanif e Rotas Estáticas
-              </strong>{" "}
-              e faz o download imediato para o seu computador.
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              Exporta todos os dados do sistema (POPs, Switches, Roteadores, Clientes, Portas, VLANs, Vlanifs e Rotas Estáticas) para download imediato.
             </p>
 
             {sysBackupResult && (
-              <div className="p-3 rounded-xl bg-white/90 dark:bg-slate-900/90 border border-sky-300 dark:border-sky-700 text-xs space-y-1">
-                <div className="font-extrabold text-sky-900 dark:text-sky-200 flex items-center gap-1.5">
+              <div className="p-3 rounded-lg bg-emerald-50/70 dark:bg-emerald-950/30 border border-emerald-200 dark:border-emerald-800/80 text-xs space-y-1">
+                <div className="font-semibold text-emerald-900 dark:text-emerald-200 flex items-center gap-1.5">
                   <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  Último Backup Gerado: {sysBackupResult.filename}
+                  Salvo: {sysBackupResult.filename}
                 </div>
                 <div className="text-[11px] text-slate-600 dark:text-slate-400">
-                  {sysBackupResult.counts.pops} POPs •{" "}
-                  {sysBackupResult.counts.devices} Switches •{" "}
-                  {sysBackupResult.counts.customers} Clientes •{" "}
-                  {sysBackupResult.counts.vlans} VLANs •{" "}
-                  {sysBackupResult.counts.routes} Rotas
+                  {sysBackupResult.counts.pops} POPs • {sysBackupResult.counts.devices} Equipamentos • {sysBackupResult.counts.customers} Clientes • {sysBackupResult.counts.vlans} VLANs • {sysBackupResult.counts.routes} Rotas
                 </div>
               </div>
             )}
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={() => handleAdminSystemBackup("json")}
               disabled={isCreatingSysBackup}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-sky-600 hover:bg-sky-700 disabled:opacity-60 text-white text-xs font-extrabold shadow-md transition cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white text-xs font-semibold shadow-sm transition cursor-pointer"
             >
               <Download className="w-4 h-4" />
-              {isCreatingSysBackup
-                ? "Gerando Backup..."
-                : "Fazer e Baixar Sistema (.JSON)"}
+              {isCreatingSysBackup ? "Gerando..." : "Baixar Backup (.JSON)"}
             </button>
             <button
               type="button"
               onClick={() => handleAdminSystemBackup("txt")}
               disabled={isCreatingSysBackup}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-sky-600 text-sky-700 dark:text-sky-300 hover:bg-sky-100 text-xs font-extrabold shadow-sm transition cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition cursor-pointer"
             >
               <Download className="w-4 h-4" />
-              Fazer e Baixar Sistema (.TXT)
+              Baixar Relatório (.TXT)
             </button>
           </div>
         </div>
 
-        {/* SUB-CAIXA 1B: BACKUP EM MODO TXT DO SWITCH (DISPLAY CU + COPIAR TUDO) */}
-        <div className="rounded-2xl border-2 border-amber-300 dark:border-amber-800 bg-amber-50/85 dark:bg-amber-950/30 p-5 shadow-sm flex flex-col justify-between space-y-4">
+        {/* CARD 2: BACKUP DO EQUIPAMENTO (SWITCH OU ROTEADOR) */}
+        <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm flex flex-col justify-between space-y-4">
           <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-amber-200 dark:border-amber-800/80 pb-3">
-              <div className="flex items-center gap-3">
-                <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center shadow">
-                  <HardDrive className="w-5 h-5" />
-                </div>
-                <div>
-                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 dark:text-amber-300 block">
-                    Exclusivo Admin • SSH &ldquo;display cu&rdquo; (current-configuration)
-                  </span>
-                  <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                    2. Backup em Modo .TXT do Switch (display cu)
-                  </h3>
-                </div>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-50 dark:bg-emerald-950/80 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 flex items-center justify-center">
+                <HardDrive className="w-5 h-5" />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 block">
+                  Extração SSH • display current-configuration
+                </span>
+                <h3 className="font-bold text-sm text-slate-900 dark:text-white">
+                  2. Backup do Equipamento (Switch ou Roteador)
+                </h3>
               </div>
             </div>
 
-            <p className="text-xs text-amber-950/85 dark:text-amber-200/85 leading-relaxed">
-              O sistema acessa o switch Huawei via SSH, executa{" "}
-              <code className="font-mono font-bold bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded">
-                screen-length 0 temporary
-              </code>{" "}
-              +{" "}
-              <code className="font-mono font-bold bg-amber-100 dark:bg-amber-900/60 px-1.5 py-0.5 rounded">
-                display cu
-              </code>
-              , copia 100% das configurações gerais do switch e salva em{" "}
-              <strong>.TXT</strong>.
+            <p className="text-xs text-slate-600 dark:text-slate-400 leading-relaxed">
+              Conecta via SSH no <strong>Switch</strong> ou <strong>Roteador</strong> selecionado, executa <code className="font-mono bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">display cu</code> e baixa a configuração completa em <strong>.TXT</strong>.
             </p>
 
             <div>
-              <label className="block text-xs font-bold text-amber-950 dark:text-amber-200 mb-1">
-                Escolher o Switch Huawei:
+              <label className="block text-[11px] font-semibold text-slate-600 dark:text-slate-400 mb-1">
+                Selecionar Switch ou Roteador:
               </label>
               <select
                 value={selectedDeviceId}
                 onChange={(e) => setSelectedDeviceId(Number(e.target.value))}
-                className="w-full rounded-xl border-2 border-amber-400 dark:border-amber-700 bg-white dark:bg-slate-900 px-3 py-2 text-xs font-mono font-extrabold text-slate-900 dark:text-slate-100 shadow-sm"
+                className="w-full rounded-lg border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               >
                 {devices.map((d) => (
                   <option key={d.id} value={d.id}>
-                    {d.name} ({d.pop_name || "POP"}) — {d.model} • IP{" "}
-                    {d.management_ip}
+                    [{getEquipmentTypeLabel(d)}] {d.name} ({d.pop_name || "POP"}) — {d.model} • {d.management_ip}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
             <button
               type="button"
               onClick={handleAdminSwitchDisplayCuTxt}
               disabled={isCreatingSwBackup || !currentSwitch}
-              className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-3 rounded-xl bg-amber-500 hover:bg-amber-600 disabled:opacity-60 text-white text-xs font-extrabold shadow-md transition cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 disabled:opacity-60 text-white text-xs font-semibold shadow-sm transition cursor-pointer"
             >
               {isCreatingSwBackup ? (
                 <>
                   <RefreshCw className="w-4 h-4 animate-spin" />
-                  Executando display cu...
+                  Extraindo display cu...
                 </>
               ) : (
                 <>
                   <Download className="w-4 h-4" />
-                  Backup .TXT ({currentSwitch?.name})
+                  Backup {getEquipmentTypeLabel(currentSwitch)} (.TXT)
                 </>
               )}
             </button>
@@ -4260,8 +3910,8 @@ export function SettingsAndSecurityView({
               type="button"
               onClick={handleAdminBackupAllSwitchesTxt}
               disabled={isCreatingAllSwBackup || devices.length === 0}
-              className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-3 rounded-xl bg-white dark:bg-slate-900 border-2 border-amber-500 text-amber-800 dark:text-amber-300 hover:bg-amber-100 text-xs font-extrabold shadow-sm transition cursor-pointer"
-              title="Acessa todos os switches cadastrados em sequência e gera um único TXT consolidado"
+              className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-lg bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold transition cursor-pointer"
+              title="Faz o backup em .TXT de todos os Switches e Roteadores cadastrados"
             >
               {isCreatingAllSwBackup ? (
                 <>
@@ -4271,7 +3921,7 @@ export function SettingsAndSecurityView({
               ) : (
                 <>
                   <HardDrive className="w-4 h-4" />
-                  Backup .TXT de TODOS ({devices.length})
+                  Backup de Todos ({devices.length})
                 </>
               )}
             </button>
@@ -4281,13 +3931,13 @@ export function SettingsAndSecurityView({
 
       {/* TERMINAL COM O RETORNO DO "DISPLAY CU" E BOTÃO COPIAR TUDO / BAIXAR TXT */}
       {swBackupResult && (
-        <div className="rounded-2xl border-2 border-amber-400 dark:border-amber-700 bg-slate-950 p-5 shadow-lg space-y-3">
+        <div className="rounded-xl border border-slate-800 bg-slate-950 p-4 shadow-md space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-3">
             <div>
-              <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-400 block">
-                Retorno Capturado do Switch via SSH (&ldquo;display cu&rdquo; / display current-configuration)
+              <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 block">
+                Configuração Extraída do Equipamento (display cu)
               </span>
-              <h4 className="text-sm font-mono font-extrabold text-white">
+              <h4 className="text-xs font-mono font-bold text-white">
                 {swBackupResult.filename} ({swBackupResult.size_bytes} bytes)
               </h4>
             </div>
@@ -4295,12 +3945,10 @@ export function SettingsAndSecurityView({
               <button
                 type="button"
                 onClick={() => handleCopySwitchTxt(swBackupResult.config_txt)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-extrabold border border-slate-700"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-semibold border border-slate-700"
               >
                 <FileCode2 className="w-3.5 h-3.5" />
-                {copiedTxt
-                  ? "Copiado para a Área de Transferência!"
-                  : "Copiar Tudo (TXT)"}
+                {copiedTxt ? "Copiado!" : "Copiar Texto"}
               </button>
               <button
                 type="button"
@@ -4310,91 +3958,44 @@ export function SettingsAndSecurityView({
                     swBackupResult.config_txt
                   )
                 }
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-white text-xs font-extrabold"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold"
               >
                 <Download className="w-3.5 h-3.5" />
-                Baixar Arquivo .TXT
+                Baixar .TXT
               </button>
             </div>
           </div>
-          <pre className="text-xs font-mono text-emerald-300 overflow-x-auto max-h-80 leading-relaxed p-2">
+          <pre className="text-xs font-mono text-emerald-300 overflow-x-auto max-h-72 leading-relaxed p-1">
             {swBackupResult.config_txt}
           </pre>
         </div>
       )}
 
-      {/* =====================================================================
-          CAIXA 2: GESTÃO DE ACESSO (RBAC) & CADASTRAR USUÁRIOS
-      ===================================================================== */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-        <div className="rounded-xl border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-950/30 p-4 space-y-1.5">
-          <span className="px-2 py-0.5 rounded bg-blue-600 text-white font-bold text-[10px] uppercase">
-            1. Área Admin (Acesso Full)
-          </span>
-          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-            Controle Irrestrito + Central de Backups
-          </h4>
-          <p className="text-slate-600 dark:text-slate-400">
-            Acesso total a Clientes, POPs, Equipamentos, Portas, VLANs, IPs
-            Vlanif, Rotas Estáticas, Provisionamento SSH, Cadastro de Usuários e
-            Backups do Sistema/Switches.
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-purple-200 dark:border-purple-900 bg-purple-50/50 dark:bg-purple-950/30 p-4 space-y-1.5">
-          <span className="px-2 py-0.5 rounded bg-purple-600 text-white font-bold text-[10px] uppercase">
-            2. Área Supervisor (Cadastros)
-          </span>
-          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-            Cadastrar Clientes e Equipamentos
-          </h4>
-          <p className="text-slate-600 dark:text-slate-400">
-            Acesso exclusivo para cadastrar, editar e gerenciar{" "}
-            <strong>Clientes</strong>, <strong>Equipamentos Huawei</strong> e{" "}
-            <strong>POPs</strong>.
-          </p>
-        </div>
-
-        <div className="rounded-xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/50 dark:bg-emerald-950/30 p-4 space-y-1.5">
-          <span className="px-2 py-0.5 rounded bg-emerald-600 text-white font-bold text-[10px] uppercase">
-            3. Área Operador (Provisionamento)
-          </span>
-          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
-            VLAN, IP, Rota e Atrelar Cliente na Porta
-          </h4>
-          <p className="text-slate-600 dark:text-slate-400">
-            Acesso focado em colocar e remover <strong>VLAN</strong>,{" "}
-            <strong>IP (Vlanif)</strong>, <strong>Rota Estática</strong> e{" "}
-            <strong>atrelar Cliente/VLAN na porta Livre</strong>.
-          </p>
-        </div>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         {/* Users & RBAC Roles */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="font-bold text-sm flex items-center gap-2">
+            <h3 className="font-bold text-sm flex items-center gap-2 text-slate-900 dark:text-white">
               <Shield className="w-4 h-4 text-blue-600" />
-              Usuários Cadastrados e Gestão de Acesso ({users.length})
+              Usuários & Controle de Acesso ({users.length})
             </h3>
             <button
               type="button"
               onClick={() => setShowUserModal(true)}
-              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold"
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold"
             >
-              + Cadastrar Usuário
+              + Cadastrar
             </button>
           </div>
 
-          <div className="space-y-2.5 text-xs">
+          <div className="space-y-2 text-xs">
             {users.map((u) => (
               <div
                 key={u.id}
                 className="p-3 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between"
               >
                 <div>
-                  <div className="font-bold text-slate-900 dark:text-slate-100">
+                  <div className="font-semibold text-slate-900 dark:text-slate-100">
                     {u.full_name}{" "}
                     <span className="font-mono text-slate-500">
                       (@{u.username})
@@ -4403,12 +4004,12 @@ export function SettingsAndSecurityView({
                   <div className="text-slate-500">{u.email}</div>
                 </div>
                 <span
-                  className={`px-2.5 py-1 rounded-full font-bold text-[11px] ${
+                  className={`px-2.5 py-1 rounded-full font-semibold text-[11px] ${
                     u.role.name === "admin"
-                      ? "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300"
                       : u.role.name === "supervisor"
-                      ? "bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
-                      : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                      ? "bg-purple-50 text-purple-700 dark:bg-purple-950 dark:text-purple-300"
+                      : "bg-emerald-50 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
                   }`}
                 >
                   {u.role.display_name}
@@ -4420,49 +4021,36 @@ export function SettingsAndSecurityView({
 
         {/* System & SSH Policies + Saved Switch TXT Backups */}
         <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-5 shadow-sm space-y-4">
-          <h3 className="font-bold text-sm flex items-center gap-2">
-            <Settings className="w-4 h-4 text-blue-600" />
-            Políticas SSH & Histórico de Backups .TXT Salvos (
-            {savedSwitchBackups.length})
-          </h3>
-          {settingsData && (
-            <div className="space-y-2.5 text-xs">
-              <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 flex items-center justify-between">
-                <div>
-                  <strong className="block text-slate-900 dark:text-slate-100">
-                    Modo de Execução SSH
-                  </strong>
-                  <span className="text-slate-500">
-                    Alternar entre Simulador VRP e Produção SSH Real (Netmiko).
-                  </span>
-                </div>
-                <button
-                  type="button"
-                  disabled={currentUser.role.name !== "admin"}
-                  onClick={handleToggleDemoMode}
-                  className={`px-3 py-1.5 rounded-lg font-bold ${
-                    settingsData.demo_mode
-                      ? "bg-amber-500 text-slate-950"
-                      : "bg-emerald-600 text-white"
-                  }`}
-                >
-                  {settingsData.demo_mode
-                    ? "DEMO / SIMULAÇÃO ATIVO"
-                    : "PRODUÇÃO (SSH REAL)"}
-                </button>
-              </div>
-            </div>
-          )}
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm flex items-center gap-2 text-slate-900 dark:text-white">
+              <Settings className="w-4 h-4 text-blue-600" />
+              Histórico de Backups de Equipamentos ({savedSwitchBackups.length})
+            </h3>
+            {settingsData && (
+              <button
+                type="button"
+                disabled={currentUser.role.name !== "admin"}
+                onClick={handleToggleDemoMode}
+                className={`px-2.5 py-1 rounded-md text-[11px] font-semibold ${
+                  settingsData.demo_mode
+                    ? "bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300"
+                    : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300"
+                }`}
+              >
+                {settingsData.demo_mode ? "Modo Simulador SSH" : "Modo SSH Produção"}
+              </button>
+            )}
+          </div>
 
-          <div className="max-h-48 overflow-y-auto space-y-2 pr-1">
+          <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
             {savedSwitchBackups.map((b: any) => (
               <div
                 key={b.id}
                 className="p-2.5 rounded-lg border border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs"
               >
                 <div className="truncate pr-2">
-                  <span className="font-mono font-bold text-slate-900 dark:text-white">
-                    #{b.id} — {b.device_name || "Switch"}
+                  <span className="font-mono font-semibold text-slate-900 dark:text-white">
+                    #{b.id} — {b.device_name || "Equipamento"}
                   </span>
                   <span className="block text-[11px] text-slate-500 truncate">
                     {b.comment || b.backup_type}
@@ -4472,13 +4060,13 @@ export function SettingsAndSecurityView({
                   type="button"
                   onClick={() =>
                     triggerBrowserDownload(
-                      `BACKUP-${b.device_name || "SWITCH"}-${b.id}.txt`,
+                      `BACKUP-${b.device_name || "EQUIPAMENTO"}-${b.id}.txt`,
                       b.config_content || b.config_text || "# Sem conteúdo"
                     )
                   }
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-500 hover:bg-amber-600 text-white font-bold text-[11px] shrink-0"
+                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 font-semibold text-[11px] shrink-0"
                 >
-                  <Download className="w-3 h-3" /> .TXT
+                  <Download className="w-3 h-3" /> Baixar .TXT
                 </button>
               </div>
             ))}
